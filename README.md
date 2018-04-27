@@ -8,6 +8,6 @@
 * Radar Relayer API
 * React
 
-## Istallation intructions
+## Installation intructions
 
 (add simple instructions on how to run the code here)
