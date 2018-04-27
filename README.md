@@ -1,12 +1,12 @@
-# CS359B Project (ADD NAME HERE)
+# CS359B Project DIY - A New Decentralized Index
 
-(short description here)
+“DIY” is a dapp that allows the user to create a personalized Index Fund in which the user can select ERC20 tokens of choice and set parameters for rebalancing. User can also invest in funds that were started by other people and thematic indices. 
 
 ## Technologies used
 
-(Add only the specific technologies you need to use until Midterm)
-
-* (e.g. solidity, react, node, mysql)
+* Solidity
+* Radar Relayer API
+* React
 
 ## Istallation intructions
 
