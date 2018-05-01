@@ -8,7 +8,8 @@ function app() {
   
     var contractDataPromise = $.getJSON('DIY.json');
     var networkIdPromise = web3.eth.net.getId(); // resolves on the current network id
-    var accountsPromise = web3.eth.getAccounts(); // resolves on an array of accounts
+	var accountsPromise = web3.eth.getAccounts(); // resolves on an array of accounts
+	// var prices = {}
   
     Promise.all([contractDataPromise, networkIdPromise, accountsPromise])
       .then(function initApp(results) {
