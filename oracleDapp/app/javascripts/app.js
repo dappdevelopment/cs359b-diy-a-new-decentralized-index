@@ -19,8 +19,7 @@ var account;
 
 window.App = {
   currentBalance: 0,
-  ethPriceinUSD: 0,
-  btcPriceinUSD: 0,
+  coins : {"eth":0, "eos":0, "trx":0, "ven":0, "icx":0, "bnb":0, "omg":0, "zil":0, "ae":0, "zrx":0, "btm":0},
 
   // 'Constructor'
   start: function() {
@@ -56,29 +55,132 @@ window.App = {
 
   // Opens a socket and listens for Events defined in our contract.
   addEventListeners: function(instance){
+    var self = this;
+
     var LogCreated = instance.LogUpdate({},{fromBlock: 0, toBlock: 'latest'});
-    var LogPriceUpdate = instance.LogPriceUpdate({},{fromBlock: 0, toBlock: 'latest'});
-    var LogPriceUpdate2 = instance.LogPriceUpdate2({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateEth = instance.LogPriceUpdateEth({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateEos = instance.LogPriceUpdateEos({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateTrx = instance.LogPriceUpdateTrx({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateVen = instance.LogPriceUpdateVen({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateIcx = instance.LogPriceUpdateIcx({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateBnb = instance.LogPriceUpdateBnb({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateOmg = instance.LogPriceUpdateOmg({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateZil = instance.LogPriceUpdateZil({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateAe = instance.LogPriceUpdateAe({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateZrx = instance.LogPriceUpdateZrx({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdateBtm = instance.LogPriceUpdateBtm({},{fromBlock: 0, toBlock: 'latest'});
     var LogInfo = instance.LogInfo({},{fromBlock: 0, toBlock: 'latest'});
 
-    //
-    LogPriceUpdate.watch(function(err, result){
+    //For Eth
+    LogPriceUpdateEth.watch(function(err, result){
       if(!err){
-        App.ethPriceinUSD = result.args.price;
-        App.showBalance(App.ethPriceinUSD, App.btcPriceinUSD, App.currentBalance);
+        App.coins["eth"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
       }else{
         console.log(err)
       }
     })
 
-    LogPriceUpdate2.watch(function(err, result){
+    //For Eos
+    LogPriceUpdateEos.watch(function(err, result){
       if(!err){
-        App.btcPriceinUSD = result.args.price;
-        App.showBalance(App.ethPriceinUSD, App.btcPriceinUSD, App.currentBalance);
+        App.coins["eos"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
       }else{
         console.log(err)
       }
     })
+
+    //For Tron
+    LogPriceUpdateTrx.watch(function(err, result){
+      if(!err){
+        App.coins["trx"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
+      }else{
+        console.log(err)
+      }
+    })
+
+    //For Vechain
+    LogPriceUpdateVen.watch(function(err, result){
+      if(!err){
+        App.coins["ven"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
+      }else{
+        console.log(err)
+      }
+    })
+
+    //For Icon
+    LogPriceUpdateIcx.watch(function(err, result){
+      if(!err){
+        App.coins["icx"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
+      }else{
+        console.log(err)
+      }
+    })
+
+    //For Binance coin
+    LogPriceUpdateBnb.watch(function(err, result){
+      if(!err){
+        App.coins["bnb"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
+      }else{
+        console.log(err)
+      }
+    })
+
+    //For Omisego
+    LogPriceUpdateOmg.watch(function(err, result){
+      if(!err){
+        App.coins["omg"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
+      }else{
+        console.log(err)
+      }
+    })
+
+    //For Zilliqa
+    LogPriceUpdateZil.watch(function(err, result){
+      if(!err){
+        App.coins["zil"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
+      }else{
+        console.log(err)
+      }
+    })
+
+    //For Aeternity
+    LogPriceUpdateAe.watch(function(err, result){
+      if(!err){
+        App.coins["ae"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
+      }else{
+        console.log(err)
+      }
+    })
+
+    //For 0x
+    LogPriceUpdateZrx.watch(function(err, result){
+      if(!err){
+        App.coins["zrx"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
+      }else{
+        console.log(err)
+      }
+    })
+
+    //For Bytom
+    LogPriceUpdateBtm.watch(function(err, result){
+      if(!err){
+        App.coins["btm"] = result.args.price;
+        App.showBalance(App.coins, App.currentBalance);
+      }else{
+        console.log(err)
+      }
+    })
+
 
     // Emitted when the Contract's constructor is run
     LogCreated.watch(function(err, result){
@@ -116,7 +218,7 @@ window.App = {
     }).then(function(value) {
 
       App.currentBalance = web3.fromWei(value.valueOf(), 'ether');
-      App.showBalance(App.ethPriceinUSD, App.btcPriceinUSD, App.currentBalance);
+      App.showBalance(App.coins, App.currentBalance);
 
     }).catch(function(e) {
       console.log(e);
@@ -124,10 +226,7 @@ window.App = {
     });
   },
 
-  showBalance: function(price, price2, balance){
-    console.log("eth price", price);
-    console.log("btc price", price2);
-    
+  showBalance: function(coins, balance){
     // Balance updated, start CSS animation
     var row = document.getElementById('row');
     row.style.animation = 'heartbeat 0.75s';
@@ -137,16 +236,45 @@ window.App = {
       var row = document.getElementById('row');
       row.style.animation = null;
     }, 1100)
-
+    console.log(coins)
     var balance_element = document.getElementById("balance");
     // Rounding can be more precise, this is just an example
     balance_element.innerHTML = parseFloat(balance).toFixed(6);
 
     var eth_element = document.getElementById("eth-price");
-    eth_element.innerHTML = price;
+    eth_element.innerHTML = Number(App.coins["eth"]).toFixed(2);
 
-    var btc_element = document.getElementById("btc-price");
-    btc_element.innerHTML = price2;
+    var btc_element = document.getElementById("eos-price");
+    btc_element.innerHTML = Number(App.coins['eos']).toFixed(2);
+
+    var tron_element = document.getElementById("trx-price");
+    tron_element.innerHTML = Number(App.coins["trx"]).toFixed(2);
+
+    var ven_element = document.getElementById("ven-price");
+    ven_element.innerHTML = Number(App.coins['ven']).toFixed(2);
+
+    var icx_element = document.getElementById("icx-price");
+    icx_element.innerHTML = Number(App.coins['icx']).toFixed(2);
+
+    var bnb_element = document.getElementById("bnb-price");
+    bnb_element.innerHTML = Number(App.coins['bnb']).toFixed(2);
+
+    var omg_element = document.getElementById("omg-price");
+    omg_element.innerHTML = Number(App.coins['omg']).toFixed(2);
+
+    var zil_element = document.getElementById("zil-price");
+    zil_element.innerHTML = Number(App.coins['zil']).toFixed(2);
+
+    var ae_element = document.getElementById("ae-price");
+    ae_element.innerHTML = Number(App.coins['ae']).toFixed(2);
+
+    var zrx_element = document.getElementById("zrx-price");
+    zrx_element.innerHTML = Number(App.coins['zrx']).toFixed(2);
+
+    var btm_element = document.getElementById("btm-price");
+    btm_element.innerHTML = Number(App.coins['btm']).toFixed(2);
+
+
   }
 };
 
