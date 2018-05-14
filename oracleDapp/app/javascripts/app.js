@@ -20,6 +20,7 @@ var account;
 window.App = {
   currentBalance: 0,
   ethPriceinUSD: 0,
+  btcPriceinUSD: 0,
 
   // 'Constructor'
   start: function() {
@@ -57,13 +58,23 @@ window.App = {
   addEventListeners: function(instance){
     var LogCreated = instance.LogUpdate({},{fromBlock: 0, toBlock: 'latest'});
     var LogPriceUpdate = instance.LogPriceUpdate({},{fromBlock: 0, toBlock: 'latest'});
+    var LogPriceUpdate2 = instance.LogPriceUpdate2({},{fromBlock: 0, toBlock: 'latest'});
     var LogInfo = instance.LogInfo({},{fromBlock: 0, toBlock: 'latest'});
 
     //
     LogPriceUpdate.watch(function(err, result){
       if(!err){
         App.ethPriceinUSD = result.args.price;
-        App.showBalance(App.ethPriceinUSD, App.currentBalance);
+        App.showBalance(App.ethPriceinUSD, App.btcPriceinUSD, App.currentBalance);
+      }else{
+        console.log(err)
+      }
+    })
+
+    LogPriceUpdate2.watch(function(err, result){
+      if(!err){
+        App.btcPriceinUSD = result.args.price;
+        App.showBalance(App.ethPriceinUSD, App.btcPriceinUSD, App.currentBalance);
       }else{
         console.log(err)
       }
@@ -98,20 +109,25 @@ window.App = {
 
     OraclizeContract.deployed().then(function(instance) {
       meta = instance;
-
       App.addEventListeners(instance);
 
       return meta.getBalance.call(account, {from: account});
+
     }).then(function(value) {
+
       App.currentBalance = web3.fromWei(value.valueOf(), 'ether');
-      App.showBalance(App.ethPriceinUSD, App.currentBalance);
+      App.showBalance(App.ethPriceinUSD, App.btcPriceinUSD, App.currentBalance);
+
     }).catch(function(e) {
       console.log(e);
       self.setStatus("Error getting balance; see console log.");
     });
   },
 
-  showBalance: function(price, balance){
+  showBalance: function(price, price2, balance){
+    console.log("eth price", price);
+    console.log("btc price", price2);
+    
     // Balance updated, start CSS animation
     var row = document.getElementById('row');
     row.style.animation = 'heartbeat 0.75s';
@@ -126,8 +142,11 @@ window.App = {
     // Rounding can be more precise, this is just an example
     balance_element.innerHTML = parseFloat(balance).toFixed(6);
 
-    var total_element = document.getElementById("eth-price");
-    total_element.innerHTML = price;
+    var eth_element = document.getElementById("eth-price");
+    eth_element.innerHTML = price;
+
+    var btc_element = document.getElementById("btc-price");
+    btc_element.innerHTML = price2;
   }
 };
 

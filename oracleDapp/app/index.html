@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Basic Truffle Webpack Oraclize ÐAPP w/ Frontend & Coinbase API communication.</title>
+  <title>Basic Truffle Webpack Oraclize ÐAPP w/ coinmarket cap API communication.</title>
 
   <script src="./app.js"></script>
 
@@ -11,8 +11,8 @@
 
 <body>
   <div id="container">
-    <h1 id="title">Oraclize</h1>
-    <h2> ÐApp</h2>
+    <h1 id="title">DIY Index</h1>
+    <h2> dAPP</h2>
 
     <div id="row">
       <div class="yellow">
@@ -25,6 +25,11 @@
         <h3>ETH PRICE</h3>
         <span><h1 id="eth-price">0.00</h1> USD</span>
       </div>
+
+      <div class="dark">
+        <h3>BTC PRICE</h3>
+        <span><h1 id="btc-price">0.00</h1> USD</span>
+      </div>
     </div>
 
     <span id="status"></span>
@@ -32,10 +37,7 @@
     <br />
 
     <div class="hint">
-      <div><strong>Hint:</strong> open the browser developer console to view any errors and warnings.</div>
-      <div><strong>ETH/USD</strong> rates from <a href="https://api.coinbase.com/v2/prices/ETH-USD/spot">Coinbase</a>.</div>
-
-      <div><strong>Made by:</strong> <a href="https://twitter.com/WWWillems">WWWillems</a></div>
+      <div>Rates from <a href="https://api.coinmarketcap.com/v2/ticker/?limit=10">Coin Market Cap</a>.</div>
     </div>
   </div>
 </body>
