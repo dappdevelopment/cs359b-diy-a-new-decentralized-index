@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Basic Truffle Webpack Oraclize ÐAPP w/ coinmarket cap API communication.</title>
+
+  <script src="./app.js"></script>
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
+</head>
+
+<body>
+  <div id="container">
+    <h1 id="title">DIY Index</h1>
+    <h2> dAPP</h2>
+
+    <div id="row">
+      <div class="yellow">
+        <h3>ÐAPP BALANCE</h3>
+
+        <span><h1 id="balance">0.000000</h1> ETH</span>
+      </div>
+
+      <div class="dark">
+        <h3>ETH PRICE</h3>
+        <span><h1 id="eth-price">0.00</h1> USD</span>
+      </div>
+
+      <div class="dark">
+        <h3>BTC PRICE</h3>
+        <span><h1 id="btc-price">0.00</h1> USD</span>
+      </div>
+    </div>
+
+    <span id="status"></span>
+
+    <br />
+
+    <div class="hint">
+      <div>Rates from <a href="https://api.coinmarketcap.com/v2/ticker/?limit=10">Coin Market Cap</a>.</div>
+    </div>
+  </div>
+</body>
+</html>
