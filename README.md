@@ -10,4 +10,9 @@
 
 ## Installation intructions
 
-(add simple instructions on how to run the code here)
+1. Launch 'testrpc' in oracleDapp folder, in one terminal.
+2. Run 'node bridge -a 9 -H 127.0.0.1 -p 8545 --dev' in ethereum-bridge folder, in another terminal.
+3. Copy the resultant OAR = "..." line into OracleTest.sol file (replacing the existing OAR line)
+4. Open oracleDapp in a new terminal, run 'truffle compile'
+5. Run 'truffle migrate --developement --reset'
+6. Start the server with 'npm run dev'
