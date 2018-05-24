@@ -10,6 +10,8 @@
 
 ## Installation intructions
 
-1. Open DIY-Truffle Directory, run 'truffle compile'
-2. Run 'truffle migrate --developement --reset'
-3. Start the server with 'npm run start'
+1. Open Ganache and make sure you're using the correct localhost server
+2. Open DIY-Truffle Directory, run 'truffle compile'
+3. Run 'truffle migrate --developement --reset'
+4. Start the server with 'npm run start'
+5. Make sure metamask is properly connected.
