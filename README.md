@@ -1,13 +1,28 @@
-# CS359B Project DIY - A New Decentralized Index
+Main repository for DIY - Decentralized Index
 
-“DIY” is a dapp that allows the user to create a personalized Index Fund in which the user can select ERC20 tokens of choice and set parameters for rebalancing. User can also invest in funds that were started by other people and thematic indices. 
+## Instructions 
+- Install dependencies:   ``` $ npm install ```
+ -  Bundle the JS application:   ``` $ npm run build ``` 
+  - Serve the client locally:  ``` $ npm run serve``` 
 
-## Technologies used
+## Help
 
-* Solidity
-* Radar Relayer API
-* React
+- Disclaimer: File structure from 0xtrades.info (webpack setup)
+- ``` $ yarn add package ``` to add packages or ``` npm install xyz -- save ```
+- To compile the typescript files (in client folder) - ``` tsc ```
+- Can use *.js or *.ts files
+- index.html in ../docs folder
 
-## Installation intructions
+## Status
+**0x**
+- On console.log() - Order book from radar relay
+- [Almost completed] On console.log() - order creation and fills
 
-(add simple instructions on how to run the code here)
+**Smart Contract**
+- [Currently working] Create a smart contract from js directly at runtime
+
+**Backend**
+- [Currently working] Adding mongoose support and price data series
+- [Currently working] Cron job to update prices everyday from 0x or CoinMarketCap
+
+**Frontend**
