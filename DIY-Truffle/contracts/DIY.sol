@@ -3,10 +3,12 @@ pragma solidity ^0.4.21;
 contract DIY {
     mapping (address => uint256) public balances;
     uint256 totalSupply = 21000000;
+		address public contractCreator;
     event BalanceChanged(address indexed _address, uint256 _balance);
 
-    function DIY() public {
+    constructor() public {
         balances[msg.sender] = totalSupply;        // Give the creator initially all the tokens
+				contractCreator = msg.sender;
     }
 
     function transfer(address _to, uint256 _value) public returns (bool success) {
@@ -23,10 +25,11 @@ contract DIY {
     }
 
     function mint(uint256 _amount) public returns (bool success) {
-        require(msg.sender == 0xcfE8890Af1EA254544D2aEDbfE42D7d6E628Ea91);
+        require(msg.sender == contractCreator);
+				require(_amount >= 0);
         totalSupply += _amount;
         balances[msg.sender] += _amount;
         emit BalanceChanged(msg.sender, balances[msg.sender]);
-    return true;
+				return true;
     }
 }
