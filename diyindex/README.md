@@ -1,16 +1,28 @@
-# 0xtrades.info [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/vsergeev/0xtrades.info/blob/master/LICENSE)
+Main repository for DIY - Decentralized Index
 
-A real-time trade viewer for the [0x protocol](href="https://0xproject.com/").
+## Instructions 
+- Install dependencies:   ``` $ npm install ```
+ -  Bundle the JS application:   ``` $ npm run build ``` 
+  - Serve the client locally:  ``` $ npm run serve``` 
 
-Visit it at http://0xtrades.info
+## Help
 
-### File Structure
+- Disclaimer: File structure from 0xtrades.info (webpack setup)
+- ``` $ yarn add package ``` to add packages or ``` npm install xyz -- save ```
+- To compile the typescript files (in client folder) - ``` tsc ```
+- Can use *.js or *.ts files
+- index.html in ../docs folder
 
-* [`client/`](client) - Client Application
-* [`docs/`](docs/) - Website
-* [`LICENSE`](LICENSE) - MIT License
-* [`README.md`](README.md) - This README
+## Status
+**0x**
+- On console.log() - Order book from radar relay
+- [Almost completed] On console.log() - order creation and fills
 
-## LICENSE
+**Smart Contract**
+- [Currently working] Create a smart contract from js directly at runtime
 
-0xtrades.info is MIT licensed. See the included [LICENSE](LICENSE) file.
+**Backend**
+- [Currently working] Adding mongoose support and price data series
+- [Currently working] Cron job to update prices everyday from 0x or CoinMarketCap
+
+**Frontend**
