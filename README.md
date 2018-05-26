@@ -18,6 +18,7 @@ Main repository for DIY - Decentralized Index
 - On console.log() - Order book from radar relay
 - [Almost completed] On console.log() - order creation and fills
 
+<<<<<<< HEAD
 **Smart Contract**
 - [Currently working] Create a smart contract from js directly at runtime
 
@@ -26,3 +27,9 @@ Main repository for DIY - Decentralized Index
 - [Currently working] Cron job to update prices everyday from 0x or CoinMarketCap
 
 **Frontend**
+=======
+1. Open Ganache and make sure you're using the correct localhost server
+2. Open DIY-Truffle Directory, run 'truffle compile'
+3. Run 'truffle migrate --developement --reset'
+4. Start the server with 'npm run start'
+5. Make sure metamask is properly connected.
