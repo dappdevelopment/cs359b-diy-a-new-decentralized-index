@@ -1,4 +1,4 @@
-Main repository for DIY - Decentralized Index
+## **Main repository for DIY - Decentralized Index** ##
 
 ## Instructions 
 - Install dependencies:   ``` $ npm install ```
