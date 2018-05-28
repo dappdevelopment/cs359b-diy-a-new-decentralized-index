@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "0x.js": "^0.30.2",
+    "@0xproject/connect": "^0.6.13",
     "@0xproject/types": "^0.1.9",
     "@0xproject/utils": "^0.2.4",
     "@types/bootstrap": "^3.3.39",
@@ -17,19 +18,23 @@
     "bootstrap": "^4.0.0",
     "browser-sync": "^2.24.4",
     "chart.js": "^2.7.2",
+    "ethapi-js": "^0.4.2",
     "jquery": "^3.3.1",
     "moment": "^2.22.0",
     "popper.js": "^1.14.2",
     "testrpc": "0.0.1",
-    "typescript": "^2.8.1",
+    "truffle": "^4.1.11",
     "uglifyjs-webpack-plugin": "^1.2.4",
     "underscore": "^1.9.0",
     "web3": "^0.20.6",
     "web3-provider-engine": "^13.8.0",
-    "web3-typescript-typings": "^0.9.11",
+    "web3-typescript-typings": "^0.10.2",
     "webpack": "^3.12.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/jquery": "^3.3.2",
+    "typescript": "^2.8.3"
+  },
   "scripts": {
     "build": "webpack",
     "serve": "browser-sync start -s ../docs -f ../docs",
