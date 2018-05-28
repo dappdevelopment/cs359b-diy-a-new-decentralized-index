@@ -10,7 +10,7 @@
     <title>0x Trade Viewer</title>
   </head>
   <body>
-  <button id="mint">Create my smarty contract</button>
+  <!-- <button id="mint">Create my smarty contract</button> -->
 	<!--
   <div class="container">
     <div class="row">
@@ -85,7 +85,29 @@
       </div>
     </div>
   </div>
-	-->
+  -->
+  <div class="container">
+    <div class="row">
+        <input type="hidden" name="count" value="1" />
+        <div class="control-group" id="fields">
+            <label class="control-label" for="field1"><h2>Symbol and Percentage</h2></label>
+            <div class="controls" id="profs"> 
+                <form class="input-append">
+                    <div id="field">
+                        <select id="selectToken1"></select>
+                        <input autocomplete="off" class="input" id="field1" name="prof1" type="text" placeholder="Enter a numerical percentage" data-items="8"/>
+                        <button id="b1" class="btn add-more" type="button">+</button>
+                        <h2>Total: </h2><input autocomplete="off" class="input-small" id="total" type="text" placeholder="" data-items="8" disabled/> %
+                        <h2>Rebalance: </h2><input autocomplete="off" class="input-small" id="rebalance" type="text" placeholder="" data-items="8"/> days
+                        <br>
+                        <input id="submit-btn" type="submit" value="Create Index">
+                    </div>
+                </form>
+            <br>
+            </div>
+        </div>
+    </div>
+  </div>
   <script src="js/bundle.js"></script>
   </body>
 </html>
