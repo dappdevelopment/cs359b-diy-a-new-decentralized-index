@@ -13,39 +13,32 @@ import {
 } from '@0xproject/connect';
 import { BigNumber } from '@0xproject/utils';
 import * as Web3 from 'web3';
+import * as $ from "jquery";
 
 export class RadarRelay {
-  constructor() {}
+	private _window: Window;
+	private INFURA_API_URL: string; 
+	private zeroExConfig: ZeroExConfig;
+	private relayerApiUrl: string;
+	private orderbookRequest: OrderbookRequest;
+	public orderbookResponse: OrderbookResponse;
+	public best_bid: Order;
+	public best_ask: Order;
+	private run_init: boolean;
 
-  public async init() {}
-
-  public async get_radar_relay_orders() {
-    // Provider pointing to local TestRPC on default port 8545
-    // const provider = new Web3.providers.HttpProvider('http://localhost:8545');
-		const INFURA_API_URL: string = "https://mainnet.infura.io/rdkuEWbeKAjSR9jZ6P1h";
-		// const INFURA_API_URL: string = 'https://kovan.infura.io/';
-    const provider = new Web3.providers.HttpProvider(INFURA_API_URL);
-
-  //		const Accounts = require('web3-eth-accounts');
-  //		var accounts = new Accounts(INFURA_API_URL);
-  //		console.log('accounts = ' + accounts);
-  //		// Creating a new Account
-  //		var web3=new Web3(provider);
-  //		const privatekey: string = '0x528d53be9f33de80d68b148aac930b9ab757d798ef251bcbdcfd94b95961144a';
-  //    var logAcc = web3.eth.accounts.privateKeyToAccount(privatekey);
-  //    console.log(logAcc);
-
-    // Instantiate 0x.js instance
-    const zeroExConfig: ZeroExConfig = {
-        // networkId: 50, // testrpc
-				networkId: 1
+	constructor() {
+		this.INFURA_API_URL = "https://kovan.infura.io/rdkuEWbeKAjSR9jZ6P1h";
+		this.relayerApiUrl = 'https://api.kovan.radarrelay.com/0x/v0/';
+		this.zeroExConfig = {
+				networkId: 42
     };
-    const zeroEx = new ZeroEx(provider, zeroExConfig);
+		this.run_init = false;
+	}
 
-    // Instantiate relayer client pointing to a local server on port 3000
-    const relayerApiUrl = 'https://api.radarrelay.com/0x/v0/';
-    // const relayerApiUrl = 'http://localhost:3000/v0';
-    const relayerClient = new HttpClient(relayerApiUrl);
+  public async init() {
+		const provider = new Web3.providers.HttpProvider(this.INFURA_API_URL);
+		const zeroEx = new ZeroEx(provider, this.zeroExConfig);
+    const relayerClient = new HttpClient(this.relayerApiUrl);
 
     // Get exchange contract address
     const EXCHANGE_ADDRESS = await zeroEx.exchange.getContractAddress();
@@ -55,8 +48,7 @@ export class RadarRelay {
     const wethTokenInfo = await zeroEx.tokenRegistry.getTokenBySymbolIfExistsAsync('WETH');
     const zrxTokenInfo = await zeroEx.tokenRegistry.getTokenBySymbolIfExistsAsync('ZRX');
 
-    // Check if either getTokenBySymbolIfExistsAsync query resulted in undefined
-    if (wethTokenInfo === undefined || zrxTokenInfo === undefined) {
+		if (wethTokenInfo === undefined || zrxTokenInfo === undefined) {
         throw new Error('could not find token info');
     }
 
@@ -66,18 +58,28 @@ export class RadarRelay {
 
 		console.log('weth token info = ' + wethTokenInfo.address + ' and zrx token info = ' + zrxTokenInfo.address);
 
-    // Generate orderbook request for ZRX/WETH pair
-    const orderbookRequest: OrderbookRequest = {
+		 this.orderbookRequest = {
         baseTokenAddress: ZRX_ADDRESS,
         quoteTokenAddress: WETH_ADDRESS,
     };
 
-    // Send orderbook request to relayer and receive an OrderbookResponse instance
-    const orderbookResponse: OrderbookResponse = await relayerClient.getOrderbookAsync(orderbookRequest);
+		// Send orderbook request to relayer and receive an OrderbookResponse instance
+    this.orderbookResponse = await relayerClient.getOrderbookAsync(this.orderbookRequest);
+		this.run_init = true;
+	}
 
+  public async get_radar_relay_orders() {
+    // Instantiate 0x.js instance
+    // Check if either getTokenBySymbolIfExistsAsync query resulted in undefined
+	  // Generate orderbook request for ZRX/WETH pair
+   
     // Because we are looking to exchange our ZRX for WETH, we get the bids side of the order book
     // Sort them with the best rate first
-    const sortedBids = orderbookResponse.bids.sort((orderA, orderB) => {
+		if (!(this.run_init)) {
+			await this.init();
+		}
+
+    const sortedBids = this.orderbookResponse.bids.sort((orderA, orderB) => {
         const orderRateA = (new BigNumber(orderA.makerTokenAmount)).div(new BigNumber(orderA.takerTokenAmount));
         const orderRateB = (new BigNumber(orderB.makerTokenAmount)).div(new BigNumber(orderB.takerTokenAmount));
         return orderRateB.comparedTo(orderRateA);
@@ -91,7 +93,7 @@ export class RadarRelay {
     console.log(bid_rates);
 
     // Sort them with the best rate first
-    const sortedAsks = orderbookResponse.asks.sort((orderA, orderB) => {
+    const sortedAsks = this.orderbookResponse.asks.sort((orderA, orderB) => {
         const orderRateA = (new BigNumber(orderA.makerTokenAmount)).div(new BigNumber(orderA.takerTokenAmount));
         const orderRateB = (new BigNumber(orderB.makerTokenAmount)).div(new BigNumber(orderB.takerTokenAmount));
         return orderRateB.comparedTo(orderRateA);
@@ -105,9 +107,36 @@ export class RadarRelay {
     console.log(ask_rates);
     
 		console.log('Sorted bids = ');
+		this.best_bid = sortedBids[0];
 		console.log(sortedBids[0]);
 
 		console.log('Sorted asks = ');
+		this.best_ask = sortedAsks[0];
 		console.log(sortedAsks[0]);
   }
+
+	public async get_best_bid(): Promise<Order> {
+		if (!(this.run_init)) {
+			await this.init();
+		};
+
+		return this.best_bid;
+	}
+
+	public async get_best_ask(): Promise<Order> {
+		if (!(this.run_init)) {
+			await this.init();
+		};
+
+		return this.best_ask;
+	}
+
+	public async get_order_book(): Promise<OrderbookResponse> {
+		if (!(this.run_init)) {
+			await this.init();
+		};
+
+		return this.orderbookResponse;
+	}
+
 }
