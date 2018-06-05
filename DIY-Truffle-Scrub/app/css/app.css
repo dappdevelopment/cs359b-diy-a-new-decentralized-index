@@ -1,7 +1,45 @@
 body { background-color:#F0F0F0; padding: 2em; font-family: 'Raleway','Source Sans Pro', 'Arial'; }
-.container { width: 50%; margin: 0 auto; }
+
+/* .container { width: 100%; margin: 0 auto; } */
+
 label { Display:block; Margin-bottom:10px; }
+
 input { Padding:10px; width: 50%; margin-bottom: 1em; }
+
+.row input { height: 10%;}
+.row button { height: 10%; margin-top: 0px;}
+
+/* .btn-default .off{ border: 1px solid black;} */
+
 button { margin: 2em 0; padding: 1em 4em; Display:block; }
+
 #display { padding:1em; height: 1em; background-color:#fff; margin: 1em 0; text-align: center; }
+#homeButton { margin-left: -15px;}
 #loader { width: 100px; display: none; }
+
+#display_metamask { padding:1em; height: 1em; background-color:#fff; margin: 1em 0; text-align: center; }
+.allowances {display:flex; flex-direction: column; justify-content:space-between; font-size: 24px}
+.rebalance_display { background-color: white;}
+.rebalance_fields { display:flex; flex-direction: column;}
+.rebalance_fields h2{font-size: 24px;}
+
+#actions-toolbar{ display:flex; justify-content:flex-end; }
+.borderless td {
+    background:white;
+}
+.borderless td, .borderless th {
+    border: none;
+}
+.contract-balances{font-size: 24px; text-align: center; margin: 5%; }
+#deposit-view { display: none; }
+#create-view { display: none; }
+/* #contract-view { display: none;} */
+#price-predictions { height: 70%;}
+#calc_weights { margin-left: 87%; margin-top: -4%;}
+#fields {width:100%}
+#param_fields {text-align: center;}
+#create_title {justify-content: center; margin: 40px;}
+#rebalance_fields { margin-top: 2%;}
+#contract-view > div:nth-child(3) > div.col-7.allowances > div:nth-child(1) > label > div { border: 1.5px solid black; border-left: 3px solid darkgray;}
+#contract-view > div:nth-child(3) > div.col-7.allowances > div:nth-child(2) > label > div { border: 1.5px solid black; border-left: 3px solid darkgray;}
+#contract-view > div:nth-child(3) > div.col-7.allowances > div:nth-child(3) > label > div { border: 1.5px solid black; border-left: 3px solid darkgray;}

@@ -1,7 +1,9 @@
-var constants = require('./constants');
-var bignumber = require('bignumber.js');
+// var constants = window.Constants;
+// var bignumber = require('bignumber.js');
+// import { HttpClient } from '@0xproject/connect';
 
 function app() {
+	var constants = window.Constants;
 	if (typeof web3 == 'undefined') throw 'No web3 detected. Is Metamask/Mist being used?';
 	web3 = new Web3(web3.currentProvider); // MetaMask injected Ethereum provider
 	console.log("Using web3 version: " + Web3.version);
@@ -12,10 +14,11 @@ function app() {
 
 	var contract;
 	var userAccount;
-  var diyindexAccount;
+	var diyindexAccount;
+	var contractABI;
 
 	// var contractDataPromise = $.getJSON('Marketdata.json');
-	var contractDataPromise = $.getJSON('IndexContract.json');
+	var contractDataPromise = $.getJSON('build/contracts/IndexContract.json');
 	console.log("Web3.eth.net = " + web3.eth.net);
 	if (typeof web3.eth.net === 'undefined') {
 			throw new Error("Parity signer is not available.");
@@ -31,7 +34,7 @@ function app() {
 			var networkId = results[1];
 			var accounts = results[2];
 			userAccount = accounts[0];
-      diyindexAccount = accounts[1];
+            diyindexAccount = accounts[1];
 
 		// (todo) Make sure the contract is deployed on the network to which our provider is connected
 		if (!(networkId in contractData.networks)) {
@@ -41,8 +44,11 @@ function app() {
 		console.log('Before contractData');
 		var contractAddress = contractData.networks[networkId].address;
 		console.log('ContractAddress = ' + contractAddress);
-		contract = new web3.eth.Contract(contractData.abi, contractAddress);
-		window.contractAbi = contractData.abi;
+		window.contractABI = contractData.abi;
+		contract = new web3.eth.Contract(window.contractABI, contractAddress);
+		// contract.options.address = contractAddress;
+		console.log('Setup contract');
+		window.contractAbi = contractABI;
 		window.contractAddress = contractAddress;
 		window.contract = contract;
 		window.WETH_Token = new web3.eth.Contract(constants.weth_abi, constants.weth_address);
@@ -117,24 +123,46 @@ function app() {
 
 	function getCurrentBlockHeight() {
 		web3.eth.getBlockNumber().then(function(blockHeight) { 
-			$('#current_block_height').text('Height = ' + blockHeight);
+			$('#current_block_height').text(blockHeight);
 			window.currentBlockHeight = blockHeight;
 		});
 	};
 
   function getTokenQuantities() {
     contract.methods.token_quantities().call().then(function (quantities) {
-			$('#quantities').text(quantities);
+			balance_weth = Number(quantities[0]);
+			balance_weth = balance_weth / 1000000000000000000;
+			$('#balance_weth').text(balance_weth);
+			$('#balance_zrx').text(quantities[1]);
 		})
 		.catch(console.error);
   };
 
   function getTokenWeights() {
     contract.methods.token_weight().call().then(function (weights) {
-			$('#weights').text(weights);
+			$('#quantity_weth').text(weights[0] + "%");
+			$('#quantity_zrx').text(weights[1] + "%");
 		})
 		.catch(console.error);
   };
+  
+  function calculateWts(weth_price, zrx_price){
+	let balance_weth = $('#balance_weth').text()
+	let balance_zrx = $('#balance_zrx').text()
+	let quantity_weth = $('#quantity_weth').text()
+	let quantity_zrx = $('#quantity_zrx').text()
+
+	balance_weth = Number(balance_weth);
+	balance_zrx =  Number(balance_zrx);
+	quantity_weth = Number(quantity_weth.replace(/\W/g, ''));
+	quantity_zrx = Number(quantity_zrx.replace(/\W/g, ''));
+	let total = (balance_weth * weth_price) + (balance_zrx * zrx_price)
+	current_weth = balance_weth * weth_price / total;
+	current_zrx = balance_zrx * zrx_price / total;
+	$("#weighted_weth").text(String(current_weth * 100) + "%");
+	$("#weighted_zrx").text(String(current_zrx * 100) + "%");
+
+};
 
   function getLastRebalanced() {
     contract.methods.get_last_rebalanced().call().then(function (last_rebalanced) {
@@ -167,13 +195,6 @@ function app() {
 	function getOwnerApprovalContractZRX() {
     window.ZRX_Token.methods.allowance(contractAddress, userAccount).call().then(function (allowance) {
 			$('#owner_approval_contract_ZRX').text("ZRX:owner on contract = " + allowance);
-		})
-		.catch(console.error);
-  };
-
-	function getRebalanceInBlocks() {
-    contract.methods.rebalance_in_blocks().call().then(function (rebalance_in_blocks) {
-			$('#rebalance_in_blocks').text(rebalance_in_blocks);
 		})
 		.catch(console.error);
   };
@@ -239,15 +260,19 @@ function app() {
 		console.log('After exchange trade');
 	});
 
-	$("#mint").click(function() {
+	$("#allow_ZRX").on('change', function() {
 		console.log('Setting for ZRX token');
 		setAllowanceForAllAddresses(constants.zrx_address);
+		console.log('After setting for ZRX token');
+	});
+
+	$("#allow_WETH").on('change', function() {
 		console.log('Setting for WETH token');
 		setAllowanceForAllAddresses(constants.weth_address);
 		console.log('After setting for WETH token');
 	});
 
-	$("#approve_transfer").click(function() {
+	$("#approve_transfer").on('change', function() {
 		console.log('Before approve ETH');
 		allowWrappedEtherForSmartContract();
 		console.log('After approve ETH');
@@ -262,6 +287,11 @@ function app() {
 	$("#withdraw").click(function () {
 		withdrawAllTokens();
 	});
+
+	$("#calc_weights").click(function(){
+		calculateWts(591, 1.27);
+	});
+	
 }
 
 $(document).ready(app);
