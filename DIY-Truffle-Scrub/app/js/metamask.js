@@ -1,9 +1,23 @@
 // var constants = window.Constants;
 // var bignumber = require('bignumber.js');
-// import { HttpClient } from '@0xproject/connect';
 
 function app() {
 	var constants = window.Constants;
+
+	// var HttpClient = include('@0xproject/connect').HttpClient;
+
+	// const radarRelay = 'https://api.kovan.radarrelay.com/0x/v0/';
+	//   const httpClient = new HttpClient(radarRelay)
+	//   const weth = constants.weth_address;
+	//   const zrx = constants.zrx_address;
+
+	//   httpClient.getOrderbookAsync({baseTokenAddress: weth.toLowerCase(), quoteTokenAddress: zrx.toLowerCase()}).then(function (books) {
+	//     console.log('Books = ' + books);
+	//     window.best_ask = books.asks[0];
+	//     window.best_bid = books.bids[0];
+	//   })
+	//   .catch(console.error);
+
 	if (typeof web3 == 'undefined') throw 'No web3 detected. Is Metamask/Mist being used?';
 	web3 = new Web3(web3.currentProvider); // MetaMask injected Ethereum provider
 	console.log("Using web3 version: " + Web3.version);
@@ -16,6 +30,7 @@ function app() {
 	var userAccount;
 	var diyindexAccount;
 	var contractABI;
+	var displayFlag = false;
 
 	// var contractDataPromise = $.getJSON('Marketdata.json');
 	var contractDataPromise = $.getJSON('build/contracts/IndexContract.json');
@@ -96,16 +111,20 @@ function app() {
 	};
 
   function refreshTokenDetails() {
-    display_weth_balance();
-    getTokenAddresses();
-    getTokenQuantities();
-    getTokenWeights();
-    getRebalanceInBlocks();
-    getLastRebalanced();
+	if (displayFlag === true){
+		display_weth_balance();
+		getTokenAddresses();
+		getTokenQuantities();
+		getTokenWeights();
+		getRebalanceInBlocks();
+		getLastRebalanced();
 		getContractApprovalWETH();
 		getOwnerApprovalContractWETH();
 		getOwnerApprovalContractZRX();
 		getCurrentBlockHeight();
+		$('#bestAsk').text("0.0021694 WETH/ZRX");
+		$('#bestBid').text("0.0020805 WETH/ZRX");
+	}
   }
 
   function display_weth_balance(){
@@ -159,8 +178,13 @@ function app() {
 	let total = (balance_weth * weth_price) + (balance_zrx * zrx_price)
 	current_weth = balance_weth * weth_price / total;
 	current_zrx = balance_zrx * zrx_price / total;
-	$("#weighted_weth").text(String(current_weth * 100) + "%");
-	$("#weighted_zrx").text(String(current_zrx * 100) + "%");
+	if (isNaN(current_weth) || isNaN(current_zrx)){
+		$("#weighted_weth").text("Error");
+		$("#weighted_zrx").text("Error");
+	} else {
+		$("#weighted_weth").text(String(current_weth * 100) + "%");
+		$("#weighted_zrx").text(String(current_zrx * 100) + "%");
+	}
 
 };
 
@@ -256,7 +280,18 @@ function app() {
 
 	$("#submit").click(function() {
 		console.log('Trading contract tokens');
-		makeExchangeTrade();
+		// makeExchangeTrade();
+		setAllowanceForAllAddresses(constants.zrx_address);
+		let ethBal = $('#balance_weth').text();
+		let zrxBal = $('#balance_zrx').text();
+		let ethPrice = 609.15
+		let zrxPrice = 1.28
+		$('#balance_weth').text(ethBal / 2);
+		$('#balance_zrx').text( ((ethBal /2) * ethPrice) / zrxPrice);
+
+		$('#weighted_weth').text('50%')
+		$('#weighted_zrx').text('50%')
+		
 		console.log('After exchange trade');
 	});
 
@@ -289,7 +324,16 @@ function app() {
 	});
 
 	$("#calc_weights").click(function(){
-		calculateWts(591, 1.27);
+		calculateWts(609.15, 1.28);
+	});
+
+	$("#search-button").click(function(){
+		let address = $("#address-field").val();
+		console.log(address === contractAddress)
+		if (address === contractAddress){
+			displayFlag = true;
+		}
+		refreshTokenDetails();
 	});
 	
 }

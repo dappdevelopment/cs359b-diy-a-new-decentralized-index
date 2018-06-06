@@ -66,7 +66,7 @@ app.get('/prices', async function(request, response) {
     }
     var prices = JSON.parse(JSON.stringify(priceData));
     response.status(200).send(JSON.stringify(prices));
-});
+}).sort({"symbol":1,"timestamp":1});
 });
 
 

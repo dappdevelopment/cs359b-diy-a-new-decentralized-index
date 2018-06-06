@@ -17,11 +17,11 @@
                 <div class="row" id="param_fields">   
                     <div class="col">   
                         <h2>ETH %</h2>
-                        <input autocomplete="off" class="input" id="ethField" name="prof1" type="text" placeholder="Enter a numerical percentage" data-items="8"/>
+                        <input autocomplete="off" class="input" id="ethField" name="prof1" type="text" placeholder="Enter a numerical percentage" data-items="8" value="50"/>
                     </div>
                     <div class="col">  
                         <h2>ZRX %</h2>
-                        <input autocomplete="off" class="input" id="zrxField" name="prof2" type="text" placeholder="Enter a numerical percentage" data-items="8"/>
+                        <input autocomplete="off" class="input" id="zrxField" name="prof2" type="text" placeholder="Enter a numerical percentage" data-items="8" value="50"/>
                     </div>
                     <div class="col">
                         <h2>Total %</h2>
@@ -32,19 +32,19 @@
                 <div class="row">
                     <div class="col-9"></div>
                     <div class="col-3" id="rebalance_fields">
-                        <h2>Rebalance: </h2><input autocomplete="off" class="input-small" id="rebalance" type="text" placeholder="" data-items="8"/> blocks          
+                        <h2>Rebalance: </h2><input autocomplete="off" class="input-small" id="rebalance" type="text" placeholder="" value="10" data-items="8"/> blocks          
                         <button class="wallet-btn" id="submit-btn" type="submit">Deploy Index</button>       
                     </div>
                 </div>
             </form>    
        </div>
         <div class="container" id="contract-view">
-            <button id="homeButton">Home</button>
+            <button id="homeButton">Home</button>   
             <div class="row">
                 <div class="input-group mb-3">
-                    <input id="address-search" type="text" class="form-control" placeholder="Enter Contract Address">
+                    <input id="address-field" type="text" class="form-control" placeholder="Enter Contract Address">
                     <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="button">Search</button>
+                        <button id="search-button" class="btn btn-outline-secondary" type="button">Search</button>
                     </div>
                 </div>
             </div>
@@ -71,9 +71,9 @@
                 </div>
                     
                 <div class="col rebalance_fields">
-                    <div><h2>Next Rebalance:</h2><h2 class="rebalance_display" id="rebalance_in_blocks">10</h2></div>
-                    <div><h2>Block Height:</h2><h2 class="rebalance_display" id="current_block_height">10</h2></div> 
-                    <div><h2>Last Rebalance: <h2 class="rebalance_display" id="last_rebalanced">10</h2></h2></div>
+                    <div><h2>Rebalance Frequency:</h2><h2 class="rebalance_display" id="rebalance_in_blocks"></h2></div>
+                    <div><h2>Block Height:</h2><h2 class="rebalance_display" id="current_block_height"></h2></div> 
+                    <div><h2>Last Rebalance: <h2 class="rebalance_display" id="last_rebalanced"></h2></h2></div>
                 </div>
             </div>
             <div class="row">
@@ -112,6 +112,14 @@
                             <td id="weighted_weth"></td>
                             <td id="weighted_zrx"></td>
                             </tr>
+                            <tr>
+                            <th scope="row">Current Best Ask</th>
+                            <td id="bestAsk" colspan="2"></td>
+                            </tr>
+                            <tr>
+                            <th scope="row">Current Best Bid</th>
+                            <td id="bestBid" colspan="2"></td>
+                            </tr>
                         </div>
                     </tbody>
                 </table>
@@ -142,7 +150,7 @@
                             <button id="withdraw" type="button" class="btn btn-secondary">Withdraw All Funds</button>    
                         </div>
                         <div class="btn-group mr-2" role="group" aria-label="First group">
-                            <button id="submit" type="button" class="btn btn-secondary">Make Exchange Trade</button>    
+                            <button id="submit" type="button" class="btn btn-secondary">Rebalance</button>    
                         </div>
                     </div>
                 </div>

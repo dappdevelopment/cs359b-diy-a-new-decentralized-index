@@ -33,6 +33,8 @@
 
       console.log(answer)
       $contractContainer.css("display", "block");
+
+
     });
 
     var xmlPrices = new XMLHttpRequest(); 
@@ -41,42 +43,93 @@
     xmlPrices.addEventListener('load', function() {
       if (xmlPrices.status === 200) {
         var prices = JSON.parse(xmlPrices.responseText)
-
+        
         for (let i in prices){
           let index = coinIndex[prices[i]["symbol"]]
+          if (prices[i]["price"] > 0){
 
-          if (pricesDict[index] !== undefined){
-            if (prices[i]["price"] > 0){
-              pricesDict[index][0].push(prices[i]["timestamp"]);
-              pricesDict[index][1].push(prices[i]["price"]);
-            }
-
-          } else  {
-            if (prices[i]["price"] > 0){
-              pricesDict[index] = []
-              pricesDict[index][0] = [];
-              pricesDict[index][0].push(prices[i]["timestamp"]);
-
-              pricesDict[index][1] = [];
-              pricesDict[index][1].push(prices[i]["price"]);
+            if (pricesDict[index] !== undefined){
+                pricesDict[index].push(prices[i]);
+            } else  {
+                pricesDict[index] = []
+                pricesDict[index].push(prices[i]);
             }
           }
         } 
 
-        var traceEth = {
-          x: pricesDict[0][0],
-          y: pricesDict[0][1],
+        const operation = (list1, list2, isUnion = false) =>list1.filter( a => isUnion === list2.some( b => a.timestamp === b.timestamp ) );
+
+        const inBoth = (list1, list2) => operation(list1, list2, true)
+      
+        let newPricesZRX = inBoth(pricesDict[1], pricesDict[0])
+        let newPricesWETH = inBoth(pricesDict[0], pricesDict[1])
+
+        let wethPrices = [] //weth prices
+        let zrxPrices = [] //zrx prices
+        let timeStamps = [] //timestamps
+
+        for (let i = 0; i < 240; i++){
+          timeStamps.push(newPricesZRX[i]["timestamp"])
+          zrxPrices.push(newPricesZRX[i]["price"])
+          wethPrices.push(newPricesWETH[i]["price"])
+        }
+
+        let ethQuantity = Number(document.querySelector("#ethField").value)/100;
+        let zrxQuantity = Number(document.querySelector("#zrxField").value)/100;
+
+        let divisorEth = wethPrices[0];
+        for (let i in wethPrices) {
+          wethPrices[i] = wethPrices[i] / divisorEth;
+        }
+
+        let divisorZrx = zrxPrices[0];
+        for (let i in zrxPrices) {
+          zrxPrices[i] = zrxPrices[i] / divisorZrx;
+        }
+
+        var combinedPrices = []
+        for (let i = 0; i < 240; i++){
+          let comPrice = ( ethQuantity * wethPrices[i] ) + (zrxQuantity * zrxPrices[i])
+          combinedPrices.push(comPrice);
+        }
+
+        // var traceEth = {
+        //   x: timeStamps,
+        //   y: wethPrices,
+        //   type: 'scatter',
+        //   name: 'weth'
+        //   // line: {
+        //   //   dash: 'dot',
+        //   // }
+        // };
+        
+        // var traceZrx = {
+        //   x: timeStamps,
+        //   y: zrxPrices,
+        //   type: 'scatter',
+        //   name: 'zrx'
+        //   // line: {
+        //   //   dash: 'dot',
+        //   // }
+        // };
+        
+
+        var traceEthAndZrx = {
+          x: timeStamps,
+          y: combinedPrices,
           type: 'scatter',
-          name: 'weth'
+          name: 'weth + zrx'
         };
-        var traceZrx = {
-          x: pricesDict[1][0],
-          y: pricesDict[1][1],
-          type: 'scatter',
-          name: 'zrx'
+
+        var layout = {
+          title: 'Index Performance Forecast',
+          yaxis: {
+            title: 'Value of $1 Invested at Inception'
+          }
         };
-        var data = [traceEth, traceZrx];
-        Plotly.newPlot('price-predictions', data);
+
+        let data = [traceEthAndZrx]
+        Plotly.newPlot('price-predictions', data, layout);
       }
     });
 
