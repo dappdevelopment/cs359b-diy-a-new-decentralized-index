@@ -5,6 +5,8 @@ var uristring = process.env.MONGODB_URI || "mongodb://localhost:27017/diyindex";
 // console.log("schema value: " + schema.value);
 var sha256 = require('js-sha256').sha256;
 
+
+
 mongoose.connect(uristring, function (err, res) {
     if (err) {
       	console.log ('ERROR connecting to: ' + uristring + '. ' + err);

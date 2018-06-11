@@ -2,7 +2,12 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var ObjectId = require('mongoose').Types.ObjectId;
 var mongoose = require('mongoose');
+
 // var fileUpload = require('express-fileupload');
+
+
+var HttpClient = require('@0xproject/connect').HttpClient;
+var constants = require('./constants').Constants;
 var csv = require('./csv');
 // var $ = require('./app/js/jquery.min.js');
 
@@ -45,6 +50,36 @@ app.get('/', function(request, response) {
   response.sendFile('/index.html');
 })
 
+// console.log('window: '  + window)
+
+// window.HttpClient =  HttpClient;
+// console.log(window.HttpClient)
+
+app.get('/getHttpClient', function(request, response){
+    
+    const radarRelay = 'https://api.kovan.radarrelay.com/0x/v0/';
+    const httpClient = new HttpClient(radarRelay);
+    
+    // // console.log(constants)
+    // console.log('constants weth addr:', constants.weth_address);
+    // console.log('constants zrx addr:', constants.zrx_address);
+    
+    const weth = constants.weth_address;
+    const zrx = constants.zrx_address;
+    
+
+    httpClient.getOrderbookAsync({baseTokenAddress: weth.toLowerCase(), quoteTokenAddress: zrx.toLowerCase()}).then(function (books) {
+        console.log('Books = ' + books);
+        var best_bid_order = books.asks[books.asks.length -1];
+        var best_ask_order = books.bids[books.bids.length -1];   
+        best_ask = best_ask_order.takerTokenAmount / best_ask_order.makerTokenAmount;
+        best_bid = best_bid_order.makerTokenAmount / best_bid_order.takerTokenAmount;
+        
+
+        response.status(200).send(JSON.stringify([best_ask, best_bid, best_ask_order, best_bid_order]));
+      })
+    .catch(console.error);
+})
 // var template = require('./app/js/templates.js');
 // app.get('/template', template.get);
 // var upload = require('./app/js/upload.js');
@@ -132,5 +167,5 @@ async function test() {
   await initDB();
 }
 
-// test();
+test();
 

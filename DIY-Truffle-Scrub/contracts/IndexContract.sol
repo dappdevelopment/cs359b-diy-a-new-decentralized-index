@@ -11,6 +11,11 @@ contract IndexContract is Ownable, ReentrancyGuard {
 
 		event allowanceSet(address tokenAddress);
 
+		modifier requireNonZero(uint256 value) {
+        require(value > 0);
+        _;
+    }
+
 		// TokenInfo is the address of the tokens and the %age weight
 		struct TokenInfo {
         address addr;
@@ -39,6 +44,7 @@ contract IndexContract is Ownable, ReentrancyGuard {
 		) public {
 			  require(addresses.length > 0);
         require(addresses.length == weights.length);
+				require(rebalanceInBlocks > 0);
 
 				_rebalanceInBlocks = rebalanceInBlocks;
 				_proxyAddress = proxyAddress;
@@ -56,16 +62,50 @@ contract IndexContract is Ownable, ReentrancyGuard {
         }
 		}
 
-		function deposit_weth(uint256 amount) external onlyOwner returns (bool success) {
-				require(amount > 0);
-        uint256 i;
+		function get_token(address a) internal nonReentrant returns (Token) {
+				uint256 i;
 				bool exists;
 				(i, exists) = get_index(_WETHAddress);	
 				require(exists);
 				Token token = Token(_WETHAddress);
-				require(token.transferFrom(msg.sender, this, amount));
-				_tokens[i].curr_quantity = _tokens[i].curr_quantity.add(amount);
+				return token;
+		}
+
+		function update_token_quantity(address a, uint256 amount, bool append, bool add) internal nonReentrant returns (bool) {
+				uint256 i;
+				bool exists;
+				(i, exists) = get_index(a);	
+				require(exists);
+				if (append) {
+					if (add) {	
+						_tokens[i].curr_quantity = _tokens[i].curr_quantity.add(amount);
+					} else {
+						_tokens[i].curr_quantity = _tokens[i].curr_quantity.sub(amount);
+					}
+				} else {
+					_tokens[i].curr_quantity = amount;
+				}
 				return true;
+		}
+
+		function deposit_weth(uint256 amount) external onlyOwner requireNonZero(amount) returns (bool success) {
+        Token token = get_token(_WETHAddress);
+				require(token.transferFrom(msg.sender, this, amount));
+				return update_token_quantity(_WETHAddress, amount, true, true);
+		}
+		
+		function withdraw() external onlyOwner nonReentrant returns (bool success) {
+				for (uint256 i = 0; i < _tokens.length; i++) {
+            TokenInfo memory withdraw_token = _tokens[i];
+            Token token = Token(withdraw_token.addr);
+						// uint256 balance = token.balanceOf(address(this));
+            uint256 balance = withdraw_token.curr_quantity;
+						if (balance > 0) {
+							require(update_token_quantity(withdraw_token.addr, 0, false, true));
+							require(token.transfer(owner, balance));
+						}
+        }	
+        return true;
 		}
 
 		function get_last_rebalanced() external view returns (uint256) {
@@ -74,17 +114,6 @@ contract IndexContract is Ownable, ReentrancyGuard {
 
 		function rebalance_in_blocks() external view returns (uint256) {
 			return _rebalanceInBlocks;
-		}
-
-		function withdraw() external onlyOwner nonReentrant returns (bool success) {
-				for (uint256 i = 0; i < _tokens.length; i++) {
-            TokenInfo memory withdraw_token = _tokens[i];
-            Token token = Token(withdraw_token.addr);
-            uint256 amount = withdraw_token.curr_quantity;
-						_tokens[i].curr_quantity = 0;
-            require(token.transfer(owner, amount));
-        }	
-        return true;
 		}
 
 		/// @return addresses
@@ -137,12 +166,26 @@ contract IndexContract is Ownable, ReentrancyGuard {
 				emit allowanceSet(tokenAddress);
     }
 
+		function maker_amt(uint256 fillTakerTokenAmount, uint256 makerTokenAmount, uint256 takerTokenAmount) external pure returns (uint256) {
+				uint256 multiplier = 1000000000000000000;	
+				// uint256 maker_amount = fillTakerTokenAmount.mul(multiplier).div(takerTokenAmount).mul(makerTokenAmount).div(multiplier);
+				uint256 v1 = fillTakerTokenAmount.mul(multiplier);
+				uint256 v2 = v1.div(takerTokenAmount);
+				uint256 v3 = v2.mul(makerTokenAmount);
+				return v3.div(multiplier);
+		}
+
+		// make_exchange_trade: Allows the contract to fill an exchange order
+		// This function is called either by DIY or by the owner of the contract
+		// The accuracy of the order is enforced by DIY or the owner.
 		function make_exchange_trade(
         address[5] addresses, uint[7] values,
-        uint8 v, bytes32 r, bytes32 s, uint256 block_height
-    ) public returns (bool success) {
+        uint8 v, bytes32 r, bytes32 s
+    ) public requireNonZero(values[6]) returns (bool success) {
+				uint256 block_height = block.number;
         // make exchange trade can only be called by us
-        require(msg.sender == _diyindex);
+        require(msg.sender == _diyindex || msg.sender == owner);
+				require(block_height > _lastRebalanced + _rebalanceInBlocks);
         address[5] memory orderAddresses = [
             addresses[0], // maker
             addresses[1], // taker
@@ -160,9 +203,13 @@ contract IndexContract is Ownable, ReentrancyGuard {
         ];
         uint fillTakerTokenAmount = values[6]; // fillTakerTokenAmount
         // Execute Exchange trade. It either succeeds in full or fails and reverts all the changes.
-
         _exchange.fillOrKillOrder(orderAddresses, orderValues, fillTakerTokenAmount, v, r, s);
 				_lastRebalanced = block_height;
-        return true;
+				// *add* takerTokenAmount to takerToken address
+				require(update_token_quantity(addresses[3], fillTakerTokenAmount, true, false));
+				uint256 maker_qty = this.maker_amt(fillTakerTokenAmount, values[0], values[1]);
+				// *subtract* the amount from makerToken
+				require(update_token_quantity(addresses[2], maker_qty, true, true));
+				return true;
     }
 }

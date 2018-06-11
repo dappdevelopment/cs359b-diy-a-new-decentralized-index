@@ -1,0 +1,1 @@
+{"version":3,"file":"orderbook_request_schema.js","sourceRoot":"","sources":["../../../src/schemas/orderbook_request_schema.ts"],"names":[],"mappings":";;AAAa,QAAA,sBAAsB,GAAG;IAClC,EAAE,EAAE,mBAAmB;IACvB,IAAI,EAAE,QAAQ;IACd,UAAU,EAAE;QACR,gBAAgB,EAAE,EAAE,IAAI,EAAE,UAAU,EAAE;QACtC,iBAAiB,EAAE,EAAE,IAAI,EAAE,UAAU,EAAE;KAC1C;IACD,QAAQ,EAAE,CAAC,kBAAkB,EAAE,mBAAmB,CAAC;CACtD,CAAC"}

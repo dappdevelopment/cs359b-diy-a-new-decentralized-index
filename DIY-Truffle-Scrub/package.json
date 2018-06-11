@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
+    "start": "nodemon app.js",
     "build": "webpack -p && cp ./dist/app/js/bundle.js ./app/js/bundle.js",
     "watch": "webpack --watch"
   },

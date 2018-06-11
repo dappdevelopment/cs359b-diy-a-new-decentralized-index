@@ -43,3 +43,12 @@ button { margin: 2em 0; padding: 1em 4em; Display:block; }
 #contract-view > div:nth-child(3) > div.col-7.allowances > div:nth-child(1) > label > div { border: 1.5px solid black; border-left: 3px solid darkgray;}
 #contract-view > div:nth-child(3) > div.col-7.allowances > div:nth-child(2) > label > div { border: 1.5px solid black; border-left: 3px solid darkgray;}
 #contract-view > div:nth-child(3) > div.col-7.allowances > div:nth-child(3) > label > div { border: 1.5px solid black; border-left: 3px solid darkgray;}
+.webpage-thumbnail{display: flex; margin-top: 7%; justify-content: center; }
+.card-body { text-align: center;}
+#plot-err { height: 70%; text-align: center; text-shadow: black 1px; padding: 200px 100px; font-family: Arial; font-size: 24px;}
+.wallet-btn {padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;}
+#homeButton { visibility: hidden;}

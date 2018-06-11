@@ -1,22 +1,7 @@
 // var constants = window.Constants;
 // var bignumber = require('bignumber.js');
-
 function app() {
 	var constants = window.Constants;
-
-	// var HttpClient = include('@0xproject/connect').HttpClient;
-
-	// const radarRelay = 'https://api.kovan.radarrelay.com/0x/v0/';
-	//   const httpClient = new HttpClient(radarRelay)
-	//   const weth = constants.weth_address;
-	//   const zrx = constants.zrx_address;
-
-	//   httpClient.getOrderbookAsync({baseTokenAddress: weth.toLowerCase(), quoteTokenAddress: zrx.toLowerCase()}).then(function (books) {
-	//     console.log('Books = ' + books);
-	//     window.best_ask = books.asks[0];
-	//     window.best_bid = books.bids[0];
-	//   })
-	//   .catch(console.error);
 
 	if (typeof web3 == 'undefined') throw 'No web3 detected. Is Metamask/Mist being used?';
 	web3 = new Web3(web3.currentProvider); // MetaMask injected Ethereum provider
@@ -58,6 +43,7 @@ function app() {
 	
 		console.log('Before contractData');
 		var contractAddress = contractData.networks[networkId].address;
+		// var contractAddress = '0xf680B0E50C67B0Ad287eF05835aBAe331A4e5F79';
 		console.log('ContractAddress = ' + contractAddress);
 		window.contractABI = contractData.abi;
 		contract = new web3.eth.Contract(window.contractABI, contractAddress);
@@ -65,6 +51,7 @@ function app() {
 		console.log('Setup contract');
 		window.contractAbi = contractABI;
 		window.contractAddress = contractAddress;
+		document.querySelector('#address-field').value = contractAddress;
 		window.contract = contract;
 		window.WETH_Token = new web3.eth.Contract(constants.weth_abi, constants.weth_address);
 		window.ZRX_Token = new web3.eth.Contract(constants.zrx_abi, constants.zrx_address);
@@ -73,6 +60,27 @@ function app() {
 	.then(getTokenAddresses)
 	.then(refreshTokenDetails)
 	.catch(console.error);
+
+	function getBestAskAndBids(){
+		var request = new XMLHttpRequest();
+		request.addEventListener('load', function(){
+			if (request.status === 200) {
+				let bestBidAndAsk = request.responseText;
+				bestBidAndAsk = JSON.parse(bestBidAndAsk)
+				// console.log(bestBidAndAsk)
+				window.best_ask_price = bestBidAndAsk[0]
+				window.best_bid_price = bestBidAndAsk[1]
+				window.best_ask = bestBidAndAsk[2]
+				window.best_bid = bestBidAndAsk[3]
+				var bbid_val = Number(window.best_bid_price).toFixed(4)
+				var bask_val = Number(window.best_ask_price).toFixed(4)
+				$('#bestBid').text(bbid_val + " WETH/ZRX");	
+				$('#bestAsk').text(bask_val + " WETH/ZRX");
+			}
+		})
+		request.open('GET', '/getHttpClient', true)
+		request.send();
+	}
 
 	function allowWrappedEtherForSmartContract() {
 		console.log('Inside Allow Wrapped Ether Transfer to Smart Contract');
@@ -85,6 +93,20 @@ function app() {
     .then(refreshTokenDetails)
     .catch(console.error);
 	};
+
+	function get_maker_amount(order, takerAmount) {
+		console.log("Insider get maker amount");
+		console.log("Order: ", order);
+		const makerTokenAmt = order['makerTokenAmount'];
+		const takerTokenAmt = order['takerTokenAmount'];
+		contract.methods.maker_amt(takerAmount, makerTokenAmt, takerTokenAmt).call().then(function (ret_val) {
+		console.log('Maker quantity = ' + ret_val);
+		console.log('Maker Token Amt = ' + Number(makerTokenAmt));
+		console.log('Taker Token Amt = ' + Number(takerTokenAmt));
+		const req_output = takerAmount / takerTokenAmt * makerTokenAmt;
+		console.log('Output should be = ' + req_output);
+	});
+	  }
 
 	function transferWETHToContract(amount) {
 		console.log('Inside transfer WETH to contract');
@@ -122,8 +144,7 @@ function app() {
 		getOwnerApprovalContractWETH();
 		getOwnerApprovalContractZRX();
 		getCurrentBlockHeight();
-		$('#bestAsk').text("0.0021694 WETH/ZRX");
-		$('#bestBid').text("0.0020805 WETH/ZRX");
+		getBestAskAndBids();
 	}
   }
 
@@ -149,12 +170,16 @@ function app() {
 
   function getTokenQuantities() {
     contract.methods.token_quantities().call().then(function (quantities) {
-			balance_weth = Number(quantities[0]);
-			balance_weth = balance_weth / 1000000000000000000;
-			$('#balance_weth').text(balance_weth);
-			$('#balance_zrx').text(quantities[1]);
-		})
-		.catch(console.error);
+		// var balance_weth = quantities[0] / 1000000000000000000;
+		// var balance_zrx = quantities[1] / 1000000000000000000;	
+
+		var balance_weth = web3.utils.fromWei(quantities[0], 'ether');
+		var balance_zrx = web3.utils.fromWei(quantities[1], 'ether');
+		// console.log(balance_weth2, balance_zrx2)
+		$('#balance_weth').text(balance_weth);
+		$('#balance_zrx').text(balance_zrx);
+	})
+	.catch(console.error);
   };
 
   function getTokenWeights() {
@@ -164,29 +189,6 @@ function app() {
 		})
 		.catch(console.error);
   };
-  
-  function calculateWts(weth_price, zrx_price){
-	let balance_weth = $('#balance_weth').text()
-	let balance_zrx = $('#balance_zrx').text()
-	let quantity_weth = $('#quantity_weth').text()
-	let quantity_zrx = $('#quantity_zrx').text()
-
-	balance_weth = Number(balance_weth);
-	balance_zrx =  Number(balance_zrx);
-	quantity_weth = Number(quantity_weth.replace(/\W/g, ''));
-	quantity_zrx = Number(quantity_zrx.replace(/\W/g, ''));
-	let total = (balance_weth * weth_price) + (balance_zrx * zrx_price)
-	current_weth = balance_weth * weth_price / total;
-	current_zrx = balance_zrx * zrx_price / total;
-	if (isNaN(current_weth) || isNaN(current_zrx)){
-		$("#weighted_weth").text("Error");
-		$("#weighted_zrx").text("Error");
-	} else {
-		$("#weighted_weth").text(String(current_weth * 100) + "%");
-		$("#weighted_zrx").text(String(current_zrx * 100) + "%");
-	}
-
-};
 
   function getLastRebalanced() {
     contract.methods.get_last_rebalanced().call().then(function (last_rebalanced) {
@@ -197,7 +199,13 @@ function app() {
 
   function getRebalanceInBlocks() {
     contract.methods.rebalance_in_blocks().call().then(function (rebalance_in_blocks) {
-			$('#rebalance_in_blocks').text(rebalance_in_blocks);
+			if (rebalance_in_blocks){
+				$('#rebalance_in_blocks').text(rebalance_in_blocks);
+			} else { 
+				$('#rebalance_in_blocks').text("N/A");
+			}
+			
+
 		})
 		.catch(console.error);
   };
@@ -208,6 +216,14 @@ function app() {
 		})
 		.catch(console.error);
 	}
+
+	// function deploy_contract(addresses, quantities, rebalanceInBlocks) {
+	// 	console.log('In deploy index method');
+	// 	contract.methods.new_index_contract(addresses, quantities, rebalanceInBlocks).send({from: userAccount}).then(function (deployedContractAddress) {
+	// 			console.log('Deployed new contract at = ' + deployedContractAddress);
+	// 		})
+	// 		.catch(console.error);
+	//   };
 
 	function getOwnerApprovalContractWETH() {
     window.WETH_Token.methods.allowance(contractAddress, userAccount).call().then(function (allowance) {
@@ -223,13 +239,6 @@ function app() {
 		.catch(console.error);
   };
 
-	function getRebalanceInBlocks() {
-    contract.methods.rebalance_in_blocks().call().then(function (rebalance_in_blocks) {
-			$('#rebalance_in_blocks').text(rebalance_in_blocks);
-		})
-		.catch(console.error);
-  };
-
 	function withdrawAllTokens() {
 		contract.methods.withdraw().send({from: userAccount}).then(function (success) {
 			if (success) {
@@ -240,31 +249,32 @@ function app() {
 		.catch(console.error);
 	};
 
-	function makeExchangeTrade() {
-		const maker = "0x032dbe12b8c4550b6a90490e6f8b79013d3833f7"; // my metamask
-		const taker = "0x0000000000000000000000000000000000000000";
-		const makerToken = "0x6ff6c0ff1d68b964901f986d4c9fa3ac68346570"; // ZRX 
-		const takerToken = "0xd0a1e359811322d97991e03f863a0c30c2cf029c"; // WETH
-		const feeRecipient = "0xa258b39954cef5cb142fd567a46cddb31a670124";
-		const makerTokenAmount = web3.utils.toBN("1000000000000000000");
-		const takerTokenAmount = web3.utils.toBN("500000000000000000000");
-		const makerFee = 0;
-		const takerFee = 0;
-		const expirationTimestampInSec = web3.utils.toBN("1530579630");
-
-		const salt = "71908247906872754311838145342720002977696048562630825704739380803597823865473";
-		const v = web3.utils.toBN("27");
-		const r = "0xf20d22005cacc1ad5a510c090fb937cdb7438750b33c55128e019ec434a061e4";
-		const s = "0x35d4772799d272e9c9adf04906a8690870e37d7dd657726652e5e1b7bb17117e";
-		const fillTakerTokenAmount = web3.utils.toBN("100000000000000");
+	function makeExchangeTrade(order, takerQuantity) {
+		console.log('Best bid = ' + order);
+		const maker = order['maker'];
+		const taker = order['taker'];
+		const makerToken = order['makerTokenAddress'];
+		const takerToken = order['takerTokenAddress'];
+		const feeRecipient = order['feeRecipient'];
+		const makerTokenAmount = order['makerTokenAmount'];
+		const takerTokenAmount = order['takerTokenAmount'];
+		const makerFee = order['makerFee'];
+		const takerFee = order['takerFee'];
+		const expirationTimestampInSec = order['expirationUnixTimestampSec'];
+		const salt = order['salt'];
+		const v = order['ecSignature']['v'];
+		const r = order['ecSignature']['r'];
+		const s = order['ecSignature']['s'];
+		const fillTakerTokenAmount = Math.min(takerQuantity, takerTokenAmount);
+	
 		const addresses = [maker, taker, makerToken, takerToken, feeRecipient];
 		const values = [makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, salt, fillTakerTokenAmount];
 		window.EXCHANGE.methods.getOrderHash([maker, taker, makerToken, takerToken, feeRecipient], [makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, salt]).call().then(function (orderHash) {
 			console.log('OrderHash = ' + orderHash);
 			window.EXCHANGE.methods.isValidSignature(maker, orderHash, v, r, s).call().then(function (success) {
-				if (success) {
+		if (success) {
 					console.log('Contract is valid?' + success);
-					contract.methods.make_exchange_trade(addresses, values, v, r, s).send({from: diyindexAccount}).then(function () {
+					contract.methods.make_exchange_trade(addresses, values, v, r, s).send({from: userAccount}).then(function () {
 						console.log('Called makeExchangeTrade');
 						console.log('Ideally follow the event log in Exchange contract to know of trade');
 						console.log('Exchange trade complete... wohoo');
@@ -272,25 +282,99 @@ function app() {
 				} else {
 					throw 'Server contract seems to be invalid';
 				}
-			});
-		})
-		.then(refreshTokenDetails)
-		.catch(console.error);
+			})
+			.then(refreshTokenDetails);
+			})
+			.catch(console.error);
+		};
+
+	function calculateWts(weth_price, zrx_price){
+		let balance_weth = $('#balance_weth').text()
+		let balance_zrx = $('#balance_zrx').text()
+		// let quantity_weth = $('#quantity_weth').text()
+		// let quantity_zrx = $('#quantity_zrx').text()
+
+		// quantity_weth = Number(quantity_weth.replace(/\W/g, ''));
+		// quantity_zrx = Number(quantity_zrx.replace(/\W/g, ''));
+	
+		balance_weth = Number(balance_weth);
+		balance_zrx =  Number(balance_zrx);
+		
+		let total = (balance_weth * weth_price) + (balance_zrx * zrx_price)
+		current_weth = balance_weth * weth_price / total;
+		current_zrx = balance_zrx * zrx_price / total;
+	
+		if (isNaN(current_weth) || isNaN(current_zrx)){
+			$("#weighted_weth").text("Error");
+			$("#weighted_zrx").text("Error");
+		} else {
+			$("#weighted_weth").text(String(current_weth * 100) + "%");
+			$("#weighted_zrx").text(String(current_zrx * 100) + "%");
+		}
+	
 	};
 
 	$("#submit").click(function() {
 		console.log('Trading contract tokens');
 		// makeExchangeTrade();
-		setAllowanceForAllAddresses(constants.zrx_address);
-		let ethBal = $('#balance_weth').text();
-		let zrxBal = $('#balance_zrx').text();
-		let ethPrice = 609.15
-		let zrxPrice = 1.28
-		$('#balance_weth').text(ethBal / 2);
-		$('#balance_zrx').text( ((ethBal /2) * ethPrice) / zrxPrice);
 
-		$('#weighted_weth').text('50%')
-		$('#weighted_zrx').text('50%')
+		let balance_weth = $('#balance_weth').text()
+		let balance_zrx = $('#balance_zrx').text()
+
+		let curr_weth_wt = $('#weighted_weth').text()
+		let curr_zrx_wt = $('#weighted_zrx').text()
+
+		let quantity_weth = $('#quantity_weth').text()
+		let quantity_zrx = $('#quantity_zrx').text()
+
+		curr_weth_wt = Number(curr_weth_wt.slice(0, -1)).toFixed(2)
+		curr_zrx_wt = Number(curr_zrx_wt.slice(0, -1)).toFixed(2)
+
+		console.log(curr_weth_wt, curr_zrx_wt)
+
+		if(curr_weth_wt === 0 && curr_zrx_wt === 0){
+			alert("Please calculate current weights first.");
+			return;
+		}
+
+		quantity_weth = Number(quantity_weth.replace(/\W/g, ''));
+		quantity_zrx = Number(quantity_zrx.replace(/\W/g, ''));
+	
+		balance_weth = Number(balance_weth);
+		balance_zrx =  Number(balance_zrx);
+
+		weth_price = 1;
+		zrx_price = window.best_ask_price;
+
+		total = (balance_weth * weth_price ) + (balance_zrx * zrx_price)
+		console.log(balance_weth , weth_price , balance_zrx , zrx_price)
+		console.log(total)
+		console.log(curr_weth_wt, quantity_weth);
+		let diff = curr_weth_wt - quantity_weth;
+		console.log(diff)
+		if (diff > 0 ){
+			// buy zrx
+
+			let amt_to_spend = (diff/100) * total;
+
+			// let zrx_to_buy = amt_to_spend / zrx_price;
+			// web3.utils.toWei(zrx_to_buy, 'ether')
+			// console.log()
+			// web3.utils.toWei(String(zrx_to_buy), 'ether')
+			// console.log(String(web3.utils.toWei(String(amt_to_spend), 'ether')));
+			
+			makeExchangeTrade(window.best_ask, web3.utils.toBN(String(web3.utils.toWei(String(amt_to_spend), 'ether'))));
+			// makeExchangeTrade(window.best_ask, web3.utils.toBN(web3.utils.toWei(String(amt_to_spend), 'ether')));
+		} else {
+			// buy eth
+			diff = Math.abs(diff)
+			let amt_to_spend = (diff/100) * total;
+			// console.log(web3.utils.toBN(String(web3.utils.toWei(String(amt_to_spend), 'ether'))))	;
+			makeExchangeTrade(window.best_bid, web3.utils.toBN(String(web3.utils.toWei(String(amt_to_spend), 'ether'))));
+		}
+
+		
+		$('#last_rebalanced').text(window.currentBlockHeight - 2)
 		
 		console.log('After exchange trade');
 	});
@@ -315,7 +399,7 @@ function app() {
 
 	$("#transfer_weth_to_contract").click(function() {
 		console.log('Before Transferring WETH to contract');
-		transferWETHToContract('0.1');
+		transferWETHToContract('0.1'); //change this
 		console.log('After Transferring WETH to contract');
 	});
 
@@ -323,19 +407,32 @@ function app() {
 		withdrawAllTokens();
 	});
 
+	$("#get_maker_amount").click(function() {
+		get_maker_amount(window.best_bid, web3.utils.toBN("100000000000000"));
+	  });
+
+	// $("#deploy").click(function () {
+	// 	var WETH_address = '0xd0a1e359811322d97991e03f863a0c30c2cf029c';
+	// 	var ZRX_address = '0x6ff6c0ff1d68b964901f986d4c9fa3ac68346570';
+	// 	var addresses = [WETH_address, ZRX_address];
+	// 	var quantities = [50, 50];
+	// 	var rebalanceInBlocks = 10;
+	// 	deploy_contract(addresses, quantities, rebalanceInBlocks);
+	// });
+
 	$("#calc_weights").click(function(){
-		calculateWts(609.15, 1.28);
+		zrx_price = window.best_ask_price;
+		calculateWts(1, zrx_price);
 	});
 
 	$("#search-button").click(function(){
 		let address = $("#address-field").val();
-		console.log(address === contractAddress)
 		if (address === contractAddress){
 			displayFlag = true;
 		}
 		refreshTokenDetails();
 	});
-	
+
 }
 
 $(document).ready(app);
