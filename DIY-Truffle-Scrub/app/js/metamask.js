@@ -5,20 +5,30 @@ function app() {
 
 	if (typeof web3 == 'undefined') throw 'No web3 detected. Is Metamask/Mist being used?';
 	web3 = new Web3(web3.currentProvider); // MetaMask injected Ethereum provider
+	// if (!( web3 === undefined || web3.eth.net.currentProvider.isMetaMask === true)){
+	// 	alert("Please connect to Kovan using Parity");
+	// 	// disable buttons
+	// }
 	console.log("Using web3 version: " + Web3.version);
 	console.log("Is metamask the provider = " + window.web3.currentProvider.isMetaMask);
 	console.log("Constructor name = " + window.web3.currentProvider.constructor.name);
 	console.log("Type of web3 = " + typeof web3);
 	window.MAX_UINT = web3.utils.toBN("115792089237316195423570985008687907853269984665640564039457584007913129639935");
 
+	var contractFactory;
 	var contract;
+	var contractAddress;
 	var userAccount;
+	var WETH_Token;
+	var ZRX_Token;
+
 	var diyindexAccount;
 	var contractABI;
 	var displayFlag = false;
 
 	// var contractDataPromise = $.getJSON('Marketdata.json');
-	var contractDataPromise = $.getJSON('build/contracts/IndexContract.json');
+	// var contractDataPromise = $.getJSON('build/contracts/IndexContract.json');
+	var contractFactoryDataPromise = $.getJSON('build/contracts/IndexContractFactory.json');
 	console.log("Web3.eth.net = " + web3.eth.net);
 	if (typeof web3.eth.net === 'undefined') {
 			throw new Error("Parity signer is not available.");
@@ -28,7 +38,7 @@ function app() {
 	var networkIdPromise = web3.eth.net.getId(); // resolves on the current network id
 	var accountsPromise = web3.eth.getAccounts(); // resolves on an array of accounts
   
-	Promise.all([contractDataPromise, networkIdPromise, accountsPromise])
+	Promise.all([contractFactoryDataPromise, networkIdPromise, accountsPromise])
 		.then(function initApp(results) {
 			var contractData = results[0];
 			var networkId = results[1];
@@ -40,25 +50,23 @@ function app() {
 		if (!(networkId in contractData.networks)) {
 			throw new Error("Contract not found in selected Ethereum network on MetaMask.");
 		}
+
+		if (networkId !== 42) {
+			throw new Error("Please connect to Kovan.");
+		}
+		// shoot warning that we're live on kovan
 	
 		console.log('Before contractData');
+		// if deployed on server 
+		// var contractAddress = constants.deploy_to_server_address
 		var contractAddress = contractData.networks[networkId].address;
-		// var contractAddress = '0xf680B0E50C67B0Ad287eF05835aBAe331A4e5F79';
-		console.log('ContractAddress = ' + contractAddress);
-		window.contractABI = contractData.abi;
-		contract = new web3.eth.Contract(window.contractABI, contractAddress);
-		// contract.options.address = contractAddress;
-		console.log('Setup contract');
-		window.contractAbi = contractABI;
-		window.contractAddress = contractAddress;
-		document.querySelector('#address-field').value = contractAddress;
-		window.contract = contract;
-		window.WETH_Token = new web3.eth.Contract(constants.weth_abi, constants.weth_address);
-		window.ZRX_Token = new web3.eth.Contract(constants.zrx_abi, constants.zrx_address);
+		console.log('ContractFactoryAddress = ' + contractAddress);
+		contractFactory = new web3.eth.Contract(contractData.abi, contractAddress);
+		WETH_Token = new web3.eth.Contract(constants.weth_abi, constants.weth_address);
+		ZRX_Token = new web3.eth.Contract(constants.zrx_abi, constants.zrx_address);
 		window.EXCHANGE = new web3.eth.Contract(constants.exchange_abi, constants.exchange_address);
+		window.contractFactory = contractFactory;
 	})
-	.then(getTokenAddresses)
-	.then(refreshTokenDetails)
 	.catch(console.error);
 
 	function getBestAskAndBids(){
@@ -84,29 +92,23 @@ function app() {
 
 	function allowWrappedEtherForSmartContract() {
 		console.log('Inside Allow Wrapped Ether Transfer to Smart Contract');
-		window.WETH_Token.methods.approve(window.contractAddress, window.MAX_UINT).send({from: userAccount}).then(function (result) {
+		WETH_Token.methods.approve(contractAddress, window.MAX_UINT).send({from: userAccount}).then(function (result) {
 			if (result) {
 				console.log('Result = ' + result);
-				console.log('Provided ' + window.contractAddress + ' appropriate permissions for account = ' + userAccount);
+				console.log('Provided ' + contractAddress + ' appropriate permissions for account = ' + userAccount);
 			};
 		})
     .then(refreshTokenDetails)
     .catch(console.error);
 	};
 
-	function get_maker_amount(order, takerAmount) {
-		console.log("Insider get maker amount");
-		console.log("Order: ", order);
-		const makerTokenAmt = order['makerTokenAmount'];
-		const takerTokenAmt = order['takerTokenAmount'];
-		contract.methods.maker_amt(takerAmount, makerTokenAmt, takerTokenAmt).call().then(function (ret_val) {
-		console.log('Maker quantity = ' + ret_val);
-		console.log('Maker Token Amt = ' + Number(makerTokenAmt));
-		console.log('Taker Token Amt = ' + Number(takerTokenAmt));
-		const req_output = takerAmount / takerTokenAmt * makerTokenAmt;
-		console.log('Output should be = ' + req_output);
-	});
-	  }
+	function get_latest_contract_address(){
+		console.log('Inside get latest contract address');
+		contractFactory.methods.get_index_contracts().call().then(function (lst){
+			window.all_deployed_contracts = lst;
+			window.last_deployed_contract = lst[-1];
+		});
+	}
 
 	function transferWETHToContract(amount) {
 		console.log('Inside transfer WETH to contract');
@@ -118,8 +120,8 @@ function app() {
 				console.log('To Contract Address ' + contractAddress);
 			};
 		})
-    .then(refreshTokenDetails)
-    .catch(console.error);
+		.then(refreshTokenDetails)
+		.catch(console.error);
 	}
 
 	function setAllowanceForAllAddresses(tokenAddress) {
@@ -128,12 +130,12 @@ function app() {
 		.then(function x() {
 			console.log('After setting allowance');
 		})
-    .then(refreshTokenDetails)
+    	.then(refreshTokenDetails)
 		.catch(console.error);
 	};
 
   function refreshTokenDetails() {
-	if (displayFlag === true){
+	// if (displayFlag === true){
 		display_weth_balance();
 		getTokenAddresses();
 		getTokenQuantities();
@@ -145,11 +147,11 @@ function app() {
 		getOwnerApprovalContractZRX();
 		getCurrentBlockHeight();
 		getBestAskAndBids();
-	}
+	// }
   }
 
   function display_weth_balance(){
-			window.WETH_Token.methods.balanceOf(contractAddress).call().then(function (weth_balance) {
+			WETH_Token.methods.balanceOf(contractAddress).call().then(function (weth_balance) {
 			$('#display').text(weth_balance);
 		});
 	}
@@ -168,8 +170,8 @@ function app() {
 		});
 	};
 
-  function getTokenQuantities() {
-    contract.methods.token_quantities().call().then(function (quantities) {
+  	function getTokenQuantities() {
+    	contract.methods.token_quantities().call().then(function (quantities) {
 		// var balance_weth = quantities[0] / 1000000000000000000;
 		// var balance_zrx = quantities[1] / 1000000000000000000;	
 
@@ -211,29 +213,72 @@ function app() {
   };
 
 	function getContractApprovalWETH() {
-		window.WETH_Token.methods.allowance(userAccount, contractAddress).call().then(function (allowance) {
+		WETH_Token.methods.allowance(userAccount, contractAddress).call().then(function (allowance) {
 			$('#contract_approval_WETH').text("WETH:contract on owner = " + allowance);
 		})
 		.catch(console.error);
 	}
 
-	// function deploy_contract(addresses, quantities, rebalanceInBlocks) {
-	// 	console.log('In deploy index method');
-	// 	contract.methods.new_index_contract(addresses, quantities, rebalanceInBlocks).send({from: userAccount}).then(function (deployedContractAddress) {
-	// 			console.log('Deployed new contract at = ' + deployedContractAddress);
-	// 		})
-	// 		.catch(console.error);
-	//   };
+	function deploy_contract(addresses, quantities, rebalanceInBlocks) {
+		var proxyAddress = '0x087eed4bc1ee3de49befbd66c662b434b15d49d4';
+		var exchangeAddress = '0x90fe2af704b34e0224bf2299c838e04d4dcf1364';
+		var WETH_address = '0xd0a1e359811322d97991e03f863a0c30c2cf029c';
+		var diyindex = '0x2BE71CE2a9bF92AA830f8926651c90A977f68a1A'; // account 2 that DIYIndex Controls
+		console.log('In deploy index method');
+		contractFactory.methods.new_index_contract(addresses, quantities, rebalanceInBlocks, proxyAddress, exchangeAddress, WETH_address, diyindex).send({from: userAccount, gas: 5940000}).then(function (deployedContractAddress) {
+			console.log('Deployed new contract at = ' + deployedContractAddress);
+			window.deployedContract = deployedContractAddress;
+			window.transactionHash = deployedContractAddress.transactionHash;
+			})
+			.then( function(x) {
+				contractFactory.methods.get_index_contract_count().call().then(function (x) {
+					if (window.currentNumContracts >= x) {
+						throw Error ('Contract address not found, please confirm deployment');
+					}
+					window.currentNumContracts = x;
+				})
+			})
+			.then( function (x) {
+				contractFactory.methods.get_index_contracts().call().then(function (x) {
+					newContractAddress = x[window.currentNumContracts - 1];
+				})
+			})
+			.then( function(x) {
+				update_contract(newContractAddress)
+			}).then(function(){
+				$('#contract-tab').trigger('click');
+				// $('#search-button').trigger('click');
+			})
+			.catch(console.error);
+	  };
+
+	function update_contract(contract_address) {
+		console.log('Deployed new contract at address = ' + contract_address);
+		var indexContractDataPromise = $.getJSON('build/contracts/IndexContract.json');
+		
+		Promise.all([indexContractDataPromise]).then(function initApp(results) {
+			var contractData = results[0];
+			contractAddress = contract_address;
+			console.log('Index contract address = ' + contractAddress);
+			contract = new web3.eth.Contract(contractData.abi, contractAddress);
+			// contract.options.address = contractAddress;
+			console.log('Setup contract');
+			window.contractAbi = contractABI;
+			// window.index_contract = contract;
+			// window.index_contract_address = contract_address;
+			document.querySelector('#address-field').value = contractAddress;
+		});
+	};
 
 	function getOwnerApprovalContractWETH() {
-    window.WETH_Token.methods.allowance(contractAddress, userAccount).call().then(function (allowance) {
+    	WETH_Token.methods.allowance(contractAddress, userAccount).call().then(function (allowance) {
 			$('#owner_approval_contract_WETH').text("WETH:owner on contract = " + allowance);
 		})
 		.catch(console.error);
   };
 
 	function getOwnerApprovalContractZRX() {
-    window.ZRX_Token.methods.allowance(contractAddress, userAccount).call().then(function (allowance) {
+		ZRX_Token.methods.allowance(contractAddress, userAccount).call().then(function (allowance) {
 			$('#owner_approval_contract_ZRX').text("ZRX:owner on contract = " + allowance);
 		})
 		.catch(console.error);
@@ -332,7 +377,7 @@ function app() {
 
 		console.log(curr_weth_wt, curr_zrx_wt)
 
-		if(curr_weth_wt === 0 && curr_zrx_wt === 0){
+		if(curr_weth_wt === 0.00 && curr_zrx_wt === 0.00){
 			alert("Please calculate current weights first.");
 			return;
 		}
@@ -407,17 +452,54 @@ function app() {
 		withdrawAllTokens();
 	});
 
-	$("#get_maker_amount").click(function() {
-		get_maker_amount(window.best_bid, web3.utils.toBN("100000000000000"));
-	  });
+	var form = document.getElementsByClassName("input-append").item(0);
+	form.addEventListener('submit', function(e){
+		e.preventDefault();
+		var percentSum = 0;
+		var answer = {}
+		answer["tokens"] = []
+
+		var ethPercentage = document.querySelector('#ethField').value
+		var zrxPercentage = document.querySelector('#zrxField').value
+		percentSum += Number(ethPercentage)
+		percentSum += Number(zrxPercentage)
+		
+		answer["tokens"].push({"token": "eth", "percentage" : ethPercentage})
+		answer["tokens"].push({"token": "zrx", "percentage" : zrxPercentage})
+		
+		answer["rebalance"] = document.getElementById("rebalance").value
+
+		if ( percentSum > 100){
+			document.getElementById("total").value = "Err"
+			percentSum = 0;
+		} else {
+			document.getElementById("total").value = percentSum;
+		}
+
+		if ( document.getElementById("total").value === "Err"){
+			alert("Please have your allocations sum to 100%.")
+		}
+		
+		contractFactory.methods.get_index_contract_count().call().then(
+			function (x) {window.currentNumContracts = x;}
+		);
+
+		// deploy index code here
+		var WETH_address = '0xd0a1e359811322d97991e03f863a0c30c2cf029c';
+		var ZRX_address = '0x6ff6c0ff1d68b964901f986d4c9fa3ac68346570';
+		var addresses = [WETH_address, ZRX_address];
+		
+		var quantities = [Number(ethPercentage), Number(zrxPercentage)];
+		var rebalanceInBlocks = Number(answer["rebalance"]);
+
+		console.log("Percentages being deployed: ", quantities);
+		console.log("Rebalance every being deployed: ", rebalanceInBlocks);
+
+		deploy_contract(addresses, quantities, rebalanceInBlocks);
+	});
 
 	// $("#deploy").click(function () {
-	// 	var WETH_address = '0xd0a1e359811322d97991e03f863a0c30c2cf029c';
-	// 	var ZRX_address = '0x6ff6c0ff1d68b964901f986d4c9fa3ac68346570';
-	// 	var addresses = [WETH_address, ZRX_address];
-	// 	var quantities = [50, 50];
-	// 	var rebalanceInBlocks = 10;
-	// 	deploy_contract(addresses, quantities, rebalanceInBlocks);
+	
 	// });
 
 	$("#calc_weights").click(function(){
@@ -427,12 +509,24 @@ function app() {
 
 	$("#search-button").click(function(){
 		let address = $("#address-field").val();
-		if (address === contractAddress){
-			displayFlag = true;
-		}
-		refreshTokenDetails();
-	});
+		contractFactory.methods.get_index_contracts().call().then(function(list){
+			update_contract(address);
+			// if (!list.includes(address)){
+			// 	alert("Contract Address Not Found.");
+			// } else {
+			// 	update_contract(address);
+			// }
+		}).then( function(){
+				if(contract){
+					refreshTokenDetails();
+				}
+			}
+		);
+		// if (address !== contractAddress){
+		// 	displayFlag = true;
+		// }
 
+	});
 }
 
 $(document).ready(app);

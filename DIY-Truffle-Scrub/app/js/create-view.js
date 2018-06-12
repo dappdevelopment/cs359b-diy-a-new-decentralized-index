@@ -7,37 +7,6 @@
   CreateView.render = function($createContainer,$contractContainer) {
     $createContainer.css("display", "block");
     // $contractContainer.css("display", "none");
-    var form = document.getElementsByClassName("input-append").item(0);
-    form.addEventListener('submit', function(e){
-      e.preventDefault();
-      var percentSum = 0;
-      var answer = {}
-      answer["tokens"] = []
-
-      var ethPercentage = document.querySelector('#ethField').value
-      var zrxPercentage = document.querySelector('#zrxField').value
-      percentSum += Number(ethPercentage)
-      percentSum += Number(zrxPercentage)
-      
-      answer["tokens"].push({"token": "eth", "percentage" : ethPercentage})
-      answer["tokens"].push({"token": "zrx", "percentage" : zrxPercentage})
-      
-      answer["rebalance"] = document.getElementById("rebalance").value
-
-      if ( percentSum > 100){
-        document.getElementById("total").value = "Err"
-        percentSum = 0;
-      } else {
-        document.getElementById("total").value = percentSum;
-      }
-
-      if ( document.getElementById("total").value != "Err"){
-        alert("Please have your allocations sum to 100%.")
-      }
-       
-      // deploy index code here
-
-    });
 
     document.querySelector("#ethField").addEventListener('input', function (evt) {
       renderPlot();
