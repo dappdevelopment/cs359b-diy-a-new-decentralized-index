@@ -18,6 +18,8 @@ function app() {
 	var contractFactory;
 	var contract;
 	var contractAddress;
+	var newContractAddress;
+
 	var userAccount;
 	var WETH_Token;
 	var ZRX_Token;
@@ -91,6 +93,7 @@ function app() {
 	}
 
 	function allowWrappedEtherForSmartContract() {
+		console.log("Contract Address and User account: " +  contractAddress +  "  " + userAccount)
 		console.log('Inside Allow Wrapped Ether Transfer to Smart Contract');
 		WETH_Token.methods.approve(contractAddress, window.MAX_UINT).send({from: userAccount}).then(function (result) {
 			if (result) {
@@ -111,6 +114,7 @@ function app() {
 	}
 
 	function transferWETHToContract(amount) {
+		console.log("weth Contract address and user acct:" + contractAddress + " " + userAccount)
 		console.log('Inside transfer WETH to contract');
 		total_amount_after_decimals = web3.utils.toWei(amount, 'ether');
 		console.log('Total amount = ' + total_amount_after_decimals);
@@ -125,12 +129,13 @@ function app() {
 	}
 
 	function setAllowanceForAllAddresses(tokenAddress) {
+		console.log("all allowances Contract address and user acct:" + contractAddress + " " + userAccount)
 		console.log('Inside method setAllowance');
 		contract.methods.set_allowances(tokenAddress).send({from: userAccount})
 		.then(function x() {
 			console.log('After setting allowance');
 		})
-    	.then(refreshTokenDetails)
+    	.then(refreshTokenDetails)	
 		.catch(console.error);
 	};
 
@@ -215,6 +220,7 @@ function app() {
 	function getContractApprovalWETH() {
 		WETH_Token.methods.allowance(userAccount, contractAddress).call().then(function (allowance) {
 			$('#contract_approval_WETH').text("WETH:contract on owner = " + allowance);
+			console.log("WETH:contract on owner = " + allowance)
 		})
 		.catch(console.error);
 	}
@@ -230,7 +236,7 @@ function app() {
 			window.deployedContract = deployedContractAddress;
 			window.transactionHash = deployedContractAddress.transactionHash;
 			})
-			.then( function(x) {
+			.then(function(x) {
 				contractFactory.methods.get_index_contract_count().call().then(function (x) {
 					if (window.currentNumContracts >= x) {
 						throw Error ('Contract address not found, please confirm deployment');
@@ -238,16 +244,17 @@ function app() {
 					window.currentNumContracts = x;
 				})
 			})
-			.then( function (x) {
+			.then(function(x) {
 				contractFactory.methods.get_index_contracts().call().then(function (x) {
 					newContractAddress = x[window.currentNumContracts - 1];
+					update_contract(newContractAddress)	
 				})
 			})
-			.then( function(x) {
-				update_contract(newContractAddress)
-			}).then(function(){
-				$('#contract-tab').trigger('click');
-				// $('#search-button').trigger('click');
+			.then(function(x) {
+				// $('#loading').delay(18000).hide(400);
+				setTimeout($('#contract-tab').trigger('click'), 9000)
+				document.querySelector('#address-field').value = contractAddress;
+				setTimeout(refreshTokenDetails, 9000)
 			})
 			.catch(console.error);
 	  };
@@ -273,6 +280,7 @@ function app() {
 	function getOwnerApprovalContractWETH() {
     	WETH_Token.methods.allowance(contractAddress, userAccount).call().then(function (allowance) {
 			$('#owner_approval_contract_WETH').text("WETH:owner on contract = " + allowance);
+			console.log("WETH:owner on contract = " + allowance)
 		})
 		.catch(console.error);
   };
@@ -280,6 +288,7 @@ function app() {
 	function getOwnerApprovalContractZRX() {
 		ZRX_Token.methods.allowance(contractAddress, userAccount).call().then(function (allowance) {
 			$('#owner_approval_contract_ZRX').text("ZRX:owner on contract = " + allowance);
+			console.log("ZRX:owner on contract = " + allowance)
 		})
 		.catch(console.error);
   };
@@ -290,7 +299,7 @@ function app() {
 				console.log('Successfully withdrawn tokens');
 			};
 		})
-    .then(refreshTokenDetails)
+    	.then(refreshTokenDetails)
 		.catch(console.error);
 	};
 
@@ -426,12 +435,14 @@ function app() {
 
 	$("#allow_ZRX").on('change', function() {
 		console.log('Setting for ZRX token');
+		console.log("zrx address for allowances: ",constants.zrx_address)
 		setAllowanceForAllAddresses(constants.zrx_address);
 		console.log('After setting for ZRX token');
 	});
 
 	$("#allow_WETH").on('change', function() {
 		console.log('Setting for WETH token');
+		console.log("zrx address for allowances: ", constants.weth_address)
 		setAllowanceForAllAddresses(constants.weth_address);
 		console.log('After setting for WETH token');
 	});
@@ -452,8 +463,7 @@ function app() {
 		withdrawAllTokens();
 	});
 
-	var form = document.getElementsByClassName("input-append").item(0);
-	form.addEventListener('submit', function(e){
+	$("#submit-btn").click(function(e){
 		e.preventDefault();
 		var percentSum = 0;
 		var answer = {}
@@ -472,13 +482,11 @@ function app() {
 		if ( percentSum > 100){
 			document.getElementById("total").value = "Err"
 			percentSum = 0;
+			alert("Please have your allocations sum to 100%.");
 		} else {
 			document.getElementById("total").value = percentSum;
 		}
 
-		if ( document.getElementById("total").value === "Err"){
-			alert("Please have your allocations sum to 100%.")
-		}
 		
 		contractFactory.methods.get_index_contract_count().call().then(
 			function (x) {window.currentNumContracts = x;}
@@ -498,10 +506,6 @@ function app() {
 		deploy_contract(addresses, quantities, rebalanceInBlocks);
 	});
 
-	// $("#deploy").click(function () {
-	
-	// });
-
 	$("#calc_weights").click(function(){
 		zrx_price = window.best_ask_price;
 		calculateWts(1, zrx_price);
@@ -516,16 +520,13 @@ function app() {
 			// } else {
 			// 	update_contract(address);
 			// }
+			
 		}).then( function(){
 				if(contract){
 					refreshTokenDetails();
 				}
 			}
 		);
-		// if (address !== contractAddress){
-		// 	displayFlag = true;
-		// }
-
 	});
 }
 

@@ -98,8 +98,8 @@ contract IndexContract is Ownable, ReentrancyGuard {
 				for (uint256 i = 0; i < _tokens.length; i++) {
             TokenInfo memory withdraw_token = _tokens[i];
             Token token = Token(withdraw_token.addr);
-						// uint256 balance = token.balanceOf(address(this));
-            uint256 balance = withdraw_token.curr_quantity;
+						uint256 balance = token.balanceOf(address(this));
+            // uint256 balance = withdraw_token.curr_quantity;
 						if (balance > 0) {
 							require(update_token_quantity(withdraw_token.addr, 0, false, true));
 							require(token.transfer(owner, balance));

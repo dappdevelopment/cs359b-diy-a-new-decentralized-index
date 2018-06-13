@@ -28,6 +28,7 @@ contract IndexContractFactory {
 	) public payable returns (address) {
 		IndexContract ic = new IndexContract(addresses, weights, rebalanceInBlocks, proxyAddress, exchangeAddress, WETHAddress, diyindex);
 		indexContracts.push(ic);
+		ic.transferOwnership(msg.sender);
 		return ic;
 //		DIY ic = new DIY(weights);
 //		indexContracts.push(ic);
