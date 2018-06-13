@@ -2,6 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var ObjectId = require('mongoose').Types.ObjectId;
 var mongoose = require('mongoose');
+require('dotenv').config()
 
 // var fileUpload = require('express-fileupload');
 
@@ -134,8 +135,9 @@ app.get('/tokens', function (request, response) {
   });
 });
 
-app.listen(process.env.PORT || 3000);
-console.log('Listening at 127.0.0.1:' + 3000);
+port = process.env.PORT || 3000;
+app.listen(port);
+console.log('Listening at 127.0.0.1:' + port);
 
 async function clearDB() {
   await model.resetDB();
