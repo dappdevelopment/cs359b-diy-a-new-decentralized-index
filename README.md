@@ -1,22 +1,9 @@
-Main repository for DIY - Decentralized Index
+## DIY - Decentralized Index
 
-## Instructions 
-- Install dependencies:   ``` $ npm install ```
- -  Bundle the JS application:   ``` $ npm run build ``` 
-  - Serve the client locally:  ``` $ npm run serve``` 
-
-## Help
-
-- Disclaimer: File structure from 0xtrades.info (webpack setup)
-- ``` $ yarn add package ``` to add packages or ``` npm install xyz -- save ```
-- To compile the typescript files (in client folder) - ``` tsc ```
-- Can use *.js or *.ts files
-- index.html in ../docs folder
-
-## Status
-**0x**
-- On console.log() - Order book from radar relay
-- [Almost completed] On console.log() - order creation and fills
+## Functionality
+In DIY Index, You can:
+- Set Token allocation parameters and rebalance interval and deploy a new contract to manage your assets.
+- You can deposit wrapped ether and withdraw 
 
 <<<<<<< HEAD
 **Smart Contract**
@@ -33,3 +20,15 @@ Main repository for DIY - Decentralized Index
 3. Run 'truffle migrate --developement --reset'
 4. Start the server with 'npm run start'
 5. Make sure metamask is properly connected.
+
+## Instructions To Run Locally 
+- Install dependencies:   ``` $ npm install ```
+  - Serve the client locally:  ``` $ npm start``` 
+  
+## Help
+
+- Disclaimer: File structure from 0xtrades.info (webpack setup)
+- ``` $ yarn add package ``` to add packages or ``` npm install xyz -- save ```
+- To compile the typescript files (in client folder) - ``` tsc ```
+- Can use *.js or *.ts files
+- index.html in ../docs folder
