@@ -1,0 +1,1 @@
+{"version":3,"file":"websocket_orderbook_channel_config_schema.js","sourceRoot":"","sources":["../../../src/schemas/websocket_orderbook_channel_config_schema.ts"],"names":[],"mappings":";;AAAa,QAAA,qCAAqC,GAAG;IACjD,EAAE,EAAE,kCAAkC;IACtC,IAAI,EAAE,QAAQ;IACd,UAAU,EAAE;QACR,mBAAmB,EAAE;YACjB,IAAI,EAAE,QAAQ;YACd,OAAO,EAAE,EAAE;SACd;KACJ;CACJ,CAAC"}

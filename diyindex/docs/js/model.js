@@ -1,15 +1,19 @@
-var mongoose = require('mongoose');
-var schema = require('./schema');
-
-var uristring = process.env.MONGODB_URI || "mongodb://localhost:27017/diyindex";
-
-var sha256 = require('js-sha256').sha256;
-
-mongoose.connect(uristring, function (err, res) {
-    if (err) {
-      	console.log ('ERROR connecting to: ' + uristring + '. ' + err);
-    } else {
-      	console.log ('Successfully connected to: ' + uristring);
-    }
-});
-
+"use strict";
+//import * as $ from "jquery";
+//import * as Web3 from 'web3';
+//import {
+//    ZeroEx,
+//} from '0x.js';
+//
+//export class Model {
+//    private _web3: Web3;
+//		private 
+//		private _zeroEx: ZeroEx;
+//
+//		constructor(web3: Web3, ) {
+//        this._web3Wrapper = new Web3Wrapper(web3.currentProvider, {});
+//        this._web3 = web3;
+//
+//    }	
+//};
+//# sourceMappingURL=model.js.map

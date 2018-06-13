@@ -8,7 +8,32 @@ import * as Logger from "./logger";
 import * as Constants from "./constants";
 import * as RadarRelay from "./radar_relay";
 import * as CreateOrder from "./create_order";
+import * as express from 'express';
+import {WelcomeController} from './controllers';
+import {OrderbookResponse, Order} from '@0xproject/connect';
 
+///******************************************************************************/
+///* Express server routes */ 
+///******************************************************************************/
+//// Create a new express application instance
+//const app: express.Application = express();
+//
+//// The port the express app will listen on
+//// const port: number = process.env.PORT || 3000;
+//const port: number = 3000;
+//
+//// Mount the WelcomeController at the /welcome route
+//app.use('/welcome', WelcomeController);
+//
+//// Serve the application at the given port
+//app.listen(port, () => {
+//    // Success callback
+//    console.log(`Listening at http://localhost:${port}/`);
+//});
+
+/******************************************************************************/
+/* Setup of a dummy js file usage */ 
+/******************************************************************************/
 const AnotherFile = require('./another_file.js');
 console.log('AnotherFile.names = ' + AnotherFile.names);
 
@@ -20,6 +45,10 @@ console.log('AnotherFile.names = ' + AnotherFile.names);
 declare global {
     interface Window {
         web3: Web3 | undefined;
+				_var: any;
+        best_bid: Order;
+        best_ask: Order;
+        order_book: OrderbookResponse;
     }
 }
 
@@ -130,106 +159,18 @@ console.log('Using web3 version: ' + web3.version);
 /*** MVC ***/
 let radar_relay = new RadarRelay.RadarRelay();
 radar_relay.get_radar_relay_orders().catch(console.error);
+window._var = 10;
+radar_relay.get_best_bid().then((bid) => {
+  window.best_bid = bid;
+});
+
+radar_relay.get_best_ask().then((ask) => {
+  window.best_ask = ask;
+});
+
+radar_relay.get_order_book().then((orderbook) => {
+  window.order_book = orderbook;
+})
 
 let create_order = new CreateOrder.CreateOrder();
 create_order.create_and_fill_order();
-
-
-
-var next = 1;
-$("#b1").click(function(e){
-    e.preventDefault();
-    var addSel = '#selectToken' + next;
-    var addto = "#field" + next;
-    var addRemove = "#field" + (next);
-    next = next + 1;
-    var selButton = '<select id="selectToken' + next + '"></select>';
-    var selectButton = $(selButton);
-    var newIn = '<input autocomplete="off" class="input form-control" placeholder="Enter a numerical percentage" id="field' + next + '" name="field' + next + '" type="text">';
-    var newInput = $(newIn);
-    var removeBtn = '<button id="remove' + (next - 1) + '" class="btn btn-danger remove-me" >-</button></div><div id="field">';
-    var removeButton = $(removeBtn);
-
-    $(addto).after(newInput);
-    $(addto).after(selectButton);
-    $(addRemove).after(removeButton);
-    let addToDataSource: any = $(addto).attr('data-source');
-    $("#field" + next).attr('data-source',addToDataSource);
-    $("#count").val(next);  
-    
-        $('.remove-me').click(function(e){
-            e.preventDefault();
-            var fieldNum = this.id.charAt(this.id.length-1);
-            var fieldID = "#field" + fieldNum;
-            var selectID =  '#selectToken' + fieldNum;
-            $(this).remove();
-            $(fieldID).remove();
-            $(selectID).remove();
-        });
-
-    getTokens(selectButton[0]);
-});
-
-let select:any = document.getElementById("selectToken1"); 
-
-function getTokens(select:any){
-
-    let options:any = [];
-    let request = new XMLHttpRequest();
-    let url = 'https://api.coinmarketcap.com/v2/ticker/?limit=20';
-
-    request.onreadystatechange = function() {
-      if (this.readyState === 4 && this.status === 200) {
-        let response = JSON.parse(this.responseText);
-        for (var id in response.data){
-            options.push(response.data[id].name);
-        }
-        for (let i = 0; i < options.length; i++){
-            var opt = options[i]
-            var el = document.createElement("option");
-            el.textContent = opt;
-            el.value = opt;
-            select.appendChild(el);
-        }
-      }
-    }
-
-    request.open("GET", url, true);
-    request.send();
-
-}
-
-getTokens(select);
-
-var form = document.getElementsByClassName("input-append").item(0);
-form.addEventListener('submit', function(e){
-    e.preventDefault();
-    let percentSum = 0;
-    let answer:any = {}
-    answer["tokens"] = []
-    for (let i = 1; i <= next; i++) {
-        var addSel = 'selectToken' + i;
-        var addto = "field" + i;
-
-        let tokenElem: any = document.getElementById(addSel);
-        let token = tokenElem.value;
-      
-        let percentageElem: any = document.getElementById(addto);
-        let percentage = percentageElem.value;
-        percentSum += Number(percentage)
-        answer["tokens"].push({"token": token, "percentage" : percentage})
-    }
-
-    let rebalanceElem: any = document.getElementById("rebalance");
-
-    answer["rebalance"] = rebalanceElem.value
-
-    let totalElem: any = document.getElementById("total");
-    if ( percentSum > 100){
-        totalElem.value = "Err"
-    } else {
-        totalElem.value = percentSum;
-    }
-
-    console.log(answer)
-});

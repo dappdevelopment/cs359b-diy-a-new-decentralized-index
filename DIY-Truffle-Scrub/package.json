@@ -1,0 +1,41 @@
+{
+  "name": "DIY-Truffle",
+  "version": "1.0.0",
+  "main": "app.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js",
+    "build": "webpack -p && cp ./dist/app/js/bundle.js ./app/js/bundle.js",
+    "watch": "webpack --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "lite-server": "^2.3.0",
+    "nodemon": "^1.17.4",
+    "webpack": "^4.8.3",
+    "webpack-cli": "^2.1.4"
+  },
+  "dependencies": {
+    "@0xproject/connect": "^0.6.14",
+    "bignumber.js": "^7.2.1",
+    "concurrently": "^3.5.1",
+    "copy-webpack-plugin": "^4.5.1",
+    "express": "^4.16.3",
+    "express-fileupload": "^0.4.0",
+    "extract-text-webpack-plugin": "^3.0.2",
+    "fast-csv": "^2.4.1",
+    "fs": "0.0.1-security",
+    "js-sha256": "^0.9.0",
+    "json2csv": "^4.1.3",
+    "mongoose": "^5.0.17",
+    "openzeppelin-solidity": "1.9.0",
+    "require": "^2.4.20",
+    "solc": "^0.4.24"
+  }
+}

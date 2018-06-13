@@ -41,52 +41,67 @@ var utils_1 = require("@0xproject/utils");
 var Web3 = require("web3");
 var RadarRelay = /** @class */ (function () {
     function RadarRelay() {
+        this.INFURA_API_URL = "https://kovan.infura.io/rdkuEWbeKAjSR9jZ6P1h";
+        this.relayerApiUrl = 'https://api.kovan.radarrelay.com/0x/v0/';
+        this.zeroExConfig = {
+            networkId: 42
+        };
+        this.run_init = false;
     }
     RadarRelay.prototype.init = function () {
-        return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
-            return [2 /*return*/];
-        }); });
-    };
-    RadarRelay.prototype.get_radar_relay_orders = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var INFURA_API_URL, provider, zeroExConfig, zeroEx, relayerApiUrl, relayerClient, EXCHANGE_ADDRESS, wethTokenInfo, zrxTokenInfo, WETH_ADDRESS, ZRX_ADDRESS, orderbookRequest, orderbookResponse, sortedBids, bid_rates, sortedAsks, ask_rates;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var provider, zeroEx, relayerClient, EXCHANGE_ADDRESS, wethTokenInfo, zrxTokenInfo, WETH_ADDRESS, ZRX_ADDRESS, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        INFURA_API_URL = "https://mainnet.infura.io/rdkuEWbeKAjSR9jZ6P1h";
-                        provider = new Web3.providers.HttpProvider(INFURA_API_URL);
-                        zeroExConfig = {
-                            // networkId: 50, // testrpc
-                            networkId: 1
-                        };
-                        zeroEx = new _0x_js_1.ZeroEx(provider, zeroExConfig);
-                        relayerApiUrl = 'https://api.radarrelay.com/0x/v0/';
-                        relayerClient = new connect_1.HttpClient(relayerApiUrl);
+                        provider = new Web3.providers.HttpProvider(this.INFURA_API_URL);
+                        zeroEx = new _0x_js_1.ZeroEx(provider, this.zeroExConfig);
+                        relayerClient = new connect_1.HttpClient(this.relayerApiUrl);
                         return [4 /*yield*/, zeroEx.exchange.getContractAddress()];
                     case 1:
-                        EXCHANGE_ADDRESS = _a.sent();
+                        EXCHANGE_ADDRESS = _b.sent();
                         console.log('Exchange address = ' + EXCHANGE_ADDRESS);
                         return [4 /*yield*/, zeroEx.tokenRegistry.getTokenBySymbolIfExistsAsync('WETH')];
                     case 2:
-                        wethTokenInfo = _a.sent();
+                        wethTokenInfo = _b.sent();
                         return [4 /*yield*/, zeroEx.tokenRegistry.getTokenBySymbolIfExistsAsync('ZRX')];
                     case 3:
-                        zrxTokenInfo = _a.sent();
-                        // Check if either getTokenBySymbolIfExistsAsync query resulted in undefined
+                        zrxTokenInfo = _b.sent();
                         if (wethTokenInfo === undefined || zrxTokenInfo === undefined) {
                             throw new Error('could not find token info');
                         }
                         WETH_ADDRESS = wethTokenInfo.address;
                         ZRX_ADDRESS = zrxTokenInfo.address;
                         console.log('weth token info = ' + wethTokenInfo.address + ' and zrx token info = ' + zrxTokenInfo.address);
-                        orderbookRequest = {
+                        this.orderbookRequest = {
                             baseTokenAddress: ZRX_ADDRESS,
                             quoteTokenAddress: WETH_ADDRESS,
                         };
-                        return [4 /*yield*/, relayerClient.getOrderbookAsync(orderbookRequest)];
+                        // Send orderbook request to relayer and receive an OrderbookResponse instance
+                        _a = this;
+                        return [4 /*yield*/, relayerClient.getOrderbookAsync(this.orderbookRequest)];
                     case 4:
-                        orderbookResponse = _a.sent();
-                        sortedBids = orderbookResponse.bids.sort(function (orderA, orderB) {
+                        // Send orderbook request to relayer and receive an OrderbookResponse instance
+                        _a.orderbookResponse = _b.sent();
+                        this.run_init = true;
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    RadarRelay.prototype.get_radar_relay_orders = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var sortedBids, bid_rates, sortedAsks, ask_rates;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!!(this.run_init)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.init()];
+                    case 1:
+                        _a.sent();
+                        _a.label = 2;
+                    case 2:
+                        sortedBids = this.orderbookResponse.bids.sort(function (orderA, orderB) {
                             var orderRateA = (new utils_1.BigNumber(orderA.makerTokenAmount)).div(new utils_1.BigNumber(orderA.takerTokenAmount));
                             var orderRateB = (new utils_1.BigNumber(orderB.makerTokenAmount)).div(new utils_1.BigNumber(orderB.takerTokenAmount));
                             return orderRateB.comparedTo(orderRateA);
@@ -96,7 +111,7 @@ var RadarRelay = /** @class */ (function () {
                             return (rate.toString() + ' WETH/ZRX');
                         });
                         console.log(bid_rates);
-                        sortedAsks = orderbookResponse.asks.sort(function (orderA, orderB) {
+                        sortedAsks = this.orderbookResponse.asks.sort(function (orderA, orderB) {
                             var orderRateA = (new utils_1.BigNumber(orderA.makerTokenAmount)).div(new utils_1.BigNumber(orderA.takerTokenAmount));
                             var orderRateB = (new utils_1.BigNumber(orderB.makerTokenAmount)).div(new utils_1.BigNumber(orderB.takerTokenAmount));
                             return orderRateB.comparedTo(orderRateA);
@@ -107,10 +122,63 @@ var RadarRelay = /** @class */ (function () {
                         });
                         console.log(ask_rates);
                         console.log('Sorted bids = ');
+                        this.best_bid = sortedBids[0];
                         console.log(sortedBids[0]);
                         console.log('Sorted asks = ');
+                        this.best_ask = sortedAsks[0];
                         console.log(sortedAsks[0]);
                         return [2 /*return*/];
+                }
+            });
+        });
+    };
+    RadarRelay.prototype.get_best_bid = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!!(this.run_init)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.init()];
+                    case 1:
+                        _a.sent();
+                        _a.label = 2;
+                    case 2:
+                        ;
+                        return [2 /*return*/, this.best_bid];
+                }
+            });
+        });
+    };
+    RadarRelay.prototype.get_best_ask = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!!(this.run_init)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.init()];
+                    case 1:
+                        _a.sent();
+                        _a.label = 2;
+                    case 2:
+                        ;
+                        return [2 /*return*/, this.best_ask];
+                }
+            });
+        });
+    };
+    RadarRelay.prototype.get_order_book = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!!(this.run_init)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.init()];
+                    case 1:
+                        _a.sent();
+                        _a.label = 2;
+                    case 2:
+                        ;
+                        return [2 /*return*/, this.orderbookResponse];
                 }
             });
         });

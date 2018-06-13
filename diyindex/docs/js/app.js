@@ -1,12 +1,31 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-// import * as bootstrap from 'bootstrap';
-var $ = require("jquery");
 var Web3 = require("web3");
 var Logger = require("./logger");
 var Constants = require("./constants");
 var RadarRelay = require("./radar_relay");
 var CreateOrder = require("./create_order");
+///******************************************************************************/
+///* Express server routes */ 
+///******************************************************************************/
+//// Create a new express application instance
+//const app: express.Application = express();
+//
+//// The port the express app will listen on
+//// const port: number = process.env.PORT || 3000;
+//const port: number = 3000;
+//
+//// Mount the WelcomeController at the /welcome route
+//app.use('/welcome', WelcomeController);
+//
+//// Serve the application at the given port
+//app.listen(port, () => {
+//    // Success callback
+//    console.log(`Listening at http://localhost:${port}/`);
+//});
+/******************************************************************************/
+/* Setup of a dummy js file usage */
+/******************************************************************************/
 var AnotherFile = require('./another_file.js');
 console.log('AnotherFile.names = ' + AnotherFile.names);
 /******************************************************************************/
@@ -56,91 +75,46 @@ else
     web3 = new Web3(ZeroClientProvider({ getAccounts: function (cb) { cb(null, []); }, rpcUrl: Constants.INFURA_API_URL }));
 /*** Testing web3 contract address ***/
 console.log('Using web3 version: ' + web3.version);
+// var contract:any;
+// var userAccount:any;
+// var contractDataPromise = $.getJSON('DIY.json');
+// var networkIdPromise = web3.eth.net.getId(); // resolves on the current network id
+// var accountsPromise = web3.eth.getAccounts(); // resolves on an array of accounts
+// Promise.all([contractDataPromise, networkIdPromise, accountsPromise])
+//   .then(function initApp(results) {
+//     var contractData = results[0];
+//     var networkId = results[1];
+//     var accounts:any = results[2];
+//     userAccount = accounts[0];
+//     // (todo) Make sure the contract is deployed on the network to which our provider is connected
+//     if (!(networkId in contractData.networks)) {
+//         throw new Error("Contract not found in selected Ethereum network on MetaMask.");
+//     }
+//     var contractAddress = contractData.networks[networkId].address;
+//     contract = new web3.eth.Contract(contractData.abi, contractAddress);
+//   })
+//   .then(refreshBalance)
+//   .catch(console.error);
+// function refreshBalance() { // Returns web3's PromiEvent
+//     // Calling the contract (try with/without declaring view)
+//     contract.methods.balanceOf(userAccount).call().then(function (balance:any) {
+//     $('#display').text(balance + " DIY");
+//     $("#loader").hide();
+//     });
+// }
 /*** MVC ***/
 var radar_relay = new RadarRelay.RadarRelay();
 radar_relay.get_radar_relay_orders().catch(console.error);
+window._var = 10;
+radar_relay.get_best_bid().then(function (bid) {
+    window.best_bid = bid;
+});
+radar_relay.get_best_ask().then(function (ask) {
+    window.best_ask = ask;
+});
+radar_relay.get_order_book().then(function (orderbook) {
+    window.order_book = orderbook;
+});
 var create_order = new CreateOrder.CreateOrder();
 create_order.create_and_fill_order();
-
-var next = 1;
-$("#b1").click(function (e) {
-    e.preventDefault();
-    var addSel = '#selectToken' + next;
-    var addto = "#field" + next;
-    var addRemove = "#field" + (next);
-    next = next + 1;
-    var selButton = '<select id="selectToken' + next + '"></select>';
-    var selectButton = $(selButton);
-    var newIn = '<input autocomplete="off" class="input form-control" placeholder="Enter a numerical percentage" id="field' + next + '" name="field' + next + '" type="text">';
-    var newInput = $(newIn);
-    var removeBtn = '<button id="remove' + (next - 1) + '" class="btn btn-danger remove-me" >-</button></div><div id="field">';
-    var removeButton = $(removeBtn);
-    $(addto).after(newInput);
-    $(addto).after(selectButton);
-    $(addRemove).after(removeButton);
-    var addToDataSource = $(addto).attr('data-source');
-    $("#field" + next).attr('data-source', addToDataSource);
-    $("#count").val(next);
-    $('.remove-me').click(function (e) {
-        e.preventDefault();
-        var fieldNum = this.id.charAt(this.id.length - 1);
-        var fieldID = "#field" + fieldNum;
-        var selectID = '#selectToken' + fieldNum;
-        $(this).remove();
-        $(fieldID).remove();
-        $(selectID).remove();
-    });
-    getTokens(selectButton[0]);
-});
-var select = document.getElementById("selectToken1");
-function getTokens(select) {
-    var options = [];
-    var request = new XMLHttpRequest();
-    var url = 'https://api.coinmarketcap.com/v2/ticker/?limit=20';
-    request.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            var response = JSON.parse(this.responseText);
-            for (var id in response.data) {
-                options.push(response.data[id].name);
-            }
-            for (var i = 0; i < options.length; i++) {
-                var opt = options[i];
-                var el = document.createElement("option");
-                el.textContent = opt;
-                el.value = opt;
-                select.appendChild(el);
-            }
-        }
-    };
-    request.open("GET", url, true);
-    request.send();
-}
-getTokens(select);
-var form = document.getElementsByClassName("input-append").item(0);
-form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var percentSum = 0;
-    var answer = {};
-    answer["tokens"] = [];
-    for (var i = 1; i <= next; i++) {
-        var addSel = 'selectToken' + i;
-        var addto = "field" + i;
-        var tokenElem = document.getElementById(addSel);
-        var token = tokenElem.value;
-        var percentageElem = document.getElementById(addto);
-        var percentage = percentageElem.value;
-        percentSum += Number(percentage);
-        answer["tokens"].push({ "token": token, "percentage": percentage });
-    }
-    var rebalanceElem = document.getElementById("rebalance");
-    answer["rebalance"] = rebalanceElem.value;
-    var totalElem = document.getElementById("total");
-    if (percentSum > 100) {
-        totalElem.value = "Err";
-    }
-    else {
-        totalElem.value = percentSum;
-    }
-    console.log(answer);
-});
 //# sourceMappingURL=app.js.map

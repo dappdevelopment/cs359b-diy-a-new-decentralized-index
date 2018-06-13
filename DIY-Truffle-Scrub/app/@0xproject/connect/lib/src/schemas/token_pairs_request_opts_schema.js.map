@@ -1,0 +1,1 @@
+{"version":3,"file":"token_pairs_request_opts_schema.js","sourceRoot":"","sources":["../../../src/schemas/token_pairs_request_opts_schema.ts"],"names":[],"mappings":";;AAAa,QAAA,2BAA2B,GAAG;IACvC,EAAE,EAAE,wBAAwB;IAC5B,IAAI,EAAE,QAAQ;IACd,UAAU,EAAE;QACR,MAAM,EAAE,EAAE,IAAI,EAAE,UAAU,EAAE;QAC5B,MAAM,EAAE,EAAE,IAAI,EAAE,UAAU,EAAE;KAC/B;CACJ,CAAC"}
