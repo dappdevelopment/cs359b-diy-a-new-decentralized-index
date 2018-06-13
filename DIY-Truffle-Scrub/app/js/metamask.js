@@ -252,7 +252,8 @@ function app() {
 			})
 			.then(function(x) {
 				// $('#loading').delay(18000).hide(400);
-				setTimeout($('#contract-tab').trigger('click'), 9000)
+				alert("Loading, please wait a few seconds to pull up contract data then click Contract-Tab");
+				setTimeout(function(){}, 9000)
 				document.querySelector('#address-field').value = contractAddress;
 				setTimeout(refreshTokenDetails, 9000)
 			})
@@ -512,14 +513,15 @@ function app() {
 	});
 
 	$("#search-button").click(function(){
+		alert("If nothing shows up, please click search a second time.")
 		let address = $("#address-field").val();
 		contractFactory.methods.get_index_contracts().call().then(function(list){
-			update_contract(address);
-			// if (!list.includes(address)){
-			// 	alert("Contract Address Not Found.");
-			// } else {
-			// 	update_contract(address);
-			// }
+			// update_contract(address);
+			if (!list.includes(address)){
+				alert("Contract Address Not Found.");
+			} else {
+				update_contract(address);
+			}
 			
 		}).then( function(){
 				if(contract){
