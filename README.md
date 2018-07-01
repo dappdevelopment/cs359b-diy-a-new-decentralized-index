@@ -1,6 +1,6 @@
 **DIY - Decentralized Index**
 We are a decentralized crypto index built on 0x and Ethereum for anyone to diversify
-investment strategies using our smart contract asset managers.
+investment strategies using our smart contract asset managers. (Express + Node + MongoDB)
 
 ## Functionality
 In DIY Index, You can:
